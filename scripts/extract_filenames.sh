@@ -1,9 +1,12 @@
 #!/bin/bash
+set -euo pipefail
 
-INPUT_DIR="../dlc-pose-estimation/Black-ChickenBroth/filtered_pose_data"
-OUTPUT_FILE="data/raw/raw_black_chickenbroth_filenames.txt"
+INPUT_DIR="../dlc-pose-estimation/Black-ChickenBroth/raw_pose_data"
+OUTPUT_FILE="data/staging/raw_black_chickenbroth_filenames.txt"
 
-mkdir -p data/raw
+mkdir -p data/staging
+
+[[ -d "$INPUT_DIR" ]] || { echo "Input directory not found: $INPUT_DIR"; exit 1; }
 
 find "$INPUT_DIR" \
   -maxdepth 1 \
