@@ -11,7 +11,8 @@ CREATE TABLE experimental_metadata (
     treatment            TEXT NOT NULL,
     trial                INTEGER,
     raw_pose_file        TEXT UNIQUE,
-    filtered_pose_file   TEXT UNIQUE
+    filtered_pose_file   TEXT UNIQUE,
+    multi_animal         BOOLEAN NOT NULL DEFAULT FALSE;
 );
 
 CREATE TABLE raw_file_list (
