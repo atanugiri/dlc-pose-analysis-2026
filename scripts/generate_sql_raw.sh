@@ -6,7 +6,7 @@ OUTPUT_SQL="data/staging/insert_raw_metadata.sql"
 
 > "$OUTPUT_SQL"
 
-while IFS= read -r filename; do
+while IFS= read -r filename;  do
     base="${filename%.h5}"
 
     IFS='_' read -r task month day year session_token animal trial_rest <<< "$base"
@@ -14,8 +14,8 @@ while IFS= read -r filename; do
     trial=$(echo "$trial_rest" | sed -E 's/Trial([0-9]+).*/\1/')
     session_date="20${year}-${month}-${day}"
     treatment=$(echo "$session_token" | sed -E 's/^S[0-9]+([YP])$/\1/')
-    raw_pose_path="raw_pose_data/$filename"
-    video_name="$base"
+    raw_pose_path="$filename"
+    video_name=$(echo "$base" | sed -E 's/(Trial[0-9]+).*/\1/')
 
     echo "INSERT INTO experimental_metadata (video_name, task, session_date, animal_name, treatment, trial, raw_pose_path)
 VALUES ('$video_name', '$task', '$session_date', '$animal', '$treatment', $trial, '$raw_pose_path');" >> "$OUTPUT_SQL"
