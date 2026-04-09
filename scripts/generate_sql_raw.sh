@@ -14,11 +14,11 @@ while IFS= read -r filename;  do
     trial=$(echo "$trial_rest" | sed -E 's/Trial([0-9]+).*/\1/')
     session_date="20${year}-${month}-${day}"
     treatment=$(echo "$session_token" | sed -E 's/^S[0-9]+([YP])$/\1/')
-    raw_pose_path="$filename"
+    raw_pose_file="$filename"
     video_name=$(echo "$base" | sed -E 's/(Trial[0-9]+).*/\1/')
 
-    echo "INSERT INTO experimental_metadata (video_name, task, session_date, animal_name, treatment, trial, raw_pose_path)
-VALUES ('$video_name', '$task', '$session_date', '$animal', '$treatment', $trial, '$raw_pose_path');" >> "$OUTPUT_SQL"
+    echo "INSERT INTO experimental_metadata (video_name, task, session_date, animal_name, treatment, trial, raw_pose_file)
+VALUES ('$video_name', '$task', '$session_date', '$animal', '$treatment', $trial, '$raw_pose_file');" >> "$OUTPUT_SQL"
 
 done < "$INPUT_FILE"
 
