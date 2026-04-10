@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-INPUT_DIR="../dlc-pose-estimation/Black-ChickenBroth/raw_pose_data"
-OUTPUT_FILE="data/staging/raw_black_chickenbroth_filenames.txt"
+INPUT_DIR="../dlc-pose-estimation/ElevatedMazeFood-Atanu-2026-04-04/raw_pose_data"
+OUTPUT_FILE="data/staging/raw_ElevatedMazeFood-Atanu-2026-04-04_filenames.txt"
 
 mkdir -p data/staging
 
