@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-INPUT_FILE="data/staging/raw_ElevatedMazeFood-Atanu-2026-04-04_filenames.txt"
+INPUT_FILE="data/staging/missing_ToyLight_filenames.txt"
 OUTPUT_SQL="data/staging/insert_raw_metadata.sql"
 
 > "$OUTPUT_SQL"
