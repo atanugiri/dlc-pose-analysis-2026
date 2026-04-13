@@ -21,3 +21,14 @@ Thumbs.db
 *.xlsx
 *.ppt
 *.pptx
+
+# Keypoint-MoSeq model artefacts
+kpms_project/
+results/syllable_clips/
+*.p
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
