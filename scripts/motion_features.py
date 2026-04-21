@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
-import sys
 
 import numpy as np
 import pandas as pd
@@ -47,10 +45,10 @@ def _compute_velocity_from_h5(
     x = coords["x"].astype(float)
     y = coords["y"].astype(float)
 
-    dt = 1.0 / float(fps)
-    vx = x.diff() / dt
-    vy = y.diff() / dt
-    speed = np.sqrt(vx * vx + vy * vy)
+    fps_f = float(fps)
+    vx = x.diff() * fps_f
+    vy = y.diff() * fps_f
+    speed = np.hypot(vx, vy)
 
     out = pd.DataFrame({"x": x, "y": y, "vx": vx, "vy": vy, "speed": speed})
     if "likelihood" in coords.columns:
@@ -90,112 +88,22 @@ def summarize_speed(
     )
 
 
-def feature_timeseries_and_value_from_h5(
-    h5_path: Path,
+def summarize_speed_from_ids(
+    record_ids: list[int],
     *,
     bodypart: str = "Midback",
-    feature_name: str = "speed",
     how: str = "mean",
     likelihood_min: float | None = None,
-) -> tuple[pd.DataFrame, float]:
-    """Return full per-frame DataFrame + one scalar summary value.
+) -> list[float]:
+    """Compute one scalar speed summary per record id.
 
-    Currently the per-frame DataFrame is the velocity DataFrame.
+    Returns values in the same order as `record_ids`.
     """
-    vel = _compute_velocity_from_h5(h5_path, bodypart=bodypart, fps=db_utils.DEFAULT_FPS)
-    value = feature_summary.summarize_feature(
-        vel,
-        feature_name=feature_name,
-        how=how,
-        likelihood_min=likelihood_min,
-    )
-    return vel, value
-
-
-def feature_timeseries_and_value_from_id(
-    record_id: int,
-    *,
-    bodypart: str = "Midback",
-    feature_name: str = "speed",
-    how: str = "mean",
-    likelihood_min: float | None = None,
-) -> tuple[pd.DataFrame, float, Path]:
-    filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
-    pose_path = dlc_io.resolve_pose_path(filtered_pose_file)
-    fps = db_utils.get_fps(record_id)
-
-    vel = _compute_velocity_from_h5(pose_path, bodypart=bodypart, fps=fps)
-    value = feature_summary.summarize_feature(
-        vel,
-        feature_name=feature_name,
-        how=how,
-        likelihood_min=likelihood_min,
-    )
-    return vel, value, pose_path
-
-
-def print_velocity_summary_from_h5(h5_path: Path, *, bodypart: str = "Midback") -> None:
-    vel = _compute_velocity_from_h5(h5_path, bodypart=bodypart, fps=db_utils.DEFAULT_FPS)
-
-    print(f"Pose file: {h5_path}")
-    print(f"Bodypart: {bodypart}")
-    print(f"FPS: {db_utils.DEFAULT_FPS}")
-    print(f"Frames: {len(vel)}")
-    print(f"Mean speed (px/s): {summarize_speed(vel, how='mean'):.3f}")
-    print(f"Median speed (px/s): {summarize_speed(vel, how='median'):.3f}")
-
-    print("\nPreview:")
-    with pd.option_context("display.max_columns", 10, "display.width", 140):
-        print(vel.head(5))
-
-
-def print_velocity_summary_from_id(record_id: int, *, bodypart: str = "Midback") -> None:
-    filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
-    pose_path = dlc_io.resolve_pose_path(filtered_pose_file)
-    fps = db_utils.get_fps(record_id)
-
-    vel = _compute_velocity_from_h5(pose_path, bodypart=bodypart, fps=fps)
-
-    print(f"ID: {record_id}")
-    print(f"Pose file: {pose_path}")
-    print(f"Bodypart: {bodypart}")
-    print(f"FPS: {fps}")
-    print(f"Frames: {len(vel)}")
-    print(f"Mean speed (px/s): {summarize_speed(vel, how='mean'):.3f}")
-    print(f"Median speed (px/s): {summarize_speed(vel, how='median'):.3f}")
-
-    print("\nPreview:")
-    with pd.option_context("display.max_columns", 10, "display.width", 140):
-        print(vel.head(5))
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Compute per-frame velocity from a DeepLabCut filtered .h5. "
-            "Provide either an experimental_metadata id (DB mode) or --h5-path (direct file mode)."
+    return [
+        summarize_speed(
+            compute_velocity_from_id(record_id, bodypart=bodypart),
+            how=how,
+            likelihood_min=likelihood_min,
         )
-    )
-    parser.add_argument("id", type=int, nargs="?", help="experimental_metadata.id (optional if --h5-path provided)")
-    parser.add_argument("--h5-path", type=Path, default=None, help="Path to a DLC .h5 (bypasses the database)")
-    parser.add_argument("--bodypart", default="Midback", help="Bodypart name (default: Midback)")
-    args = parser.parse_args()
-
-    try:
-        if args.h5_path is not None:
-            if not args.h5_path.exists():
-                raise FileNotFoundError(f"File not found: {args.h5_path}")
-            print_velocity_summary_from_h5(args.h5_path, bodypart=args.bodypart)
-            return
-
-        if args.id is None:
-            raise ValueError("Provide either an experimental_metadata id or --h5-path")
-
-        print_velocity_summary_from_id(args.id, bodypart=args.bodypart)
-    except (FileNotFoundError, ValueError) as exc:
-        print(f"Error: {exc}")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+        for record_id in record_ids
+    ]
