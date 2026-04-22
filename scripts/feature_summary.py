@@ -3,6 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from scripts.motion_features import _compute_velocity_from_h5
+
 
 def summarize_feature(
     feature_df: pd.DataFrame,
@@ -43,3 +45,16 @@ def summarize_feature(
     if how_norm == "median":
         return float(values.median(skipna=True))
     raise ValueError("how must be 'mean' or 'median'")
+
+if __name__ == "__main__":
+        import argparse
+        import db_utils
+        import motion_features
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("record_id", type=int)
+        args = parser.parse_args()
+
+        filtered_pose_file = db_utils.get_filtered_pose_file(args.record_id)
+        df = motion_features._compute_velocity_from_h5(filtered_pose_file)
+        print(df.head())

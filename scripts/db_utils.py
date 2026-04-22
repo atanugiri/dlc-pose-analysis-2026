@@ -76,3 +76,18 @@ def get_fps(record_id: int | None = None) -> float:
         return fps
     except Exception:
         return DEFAULT_FPS
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Get filtered_pose_file for a given record ID.")
+    parser.add_argument("record_id", type=int, help="Record ID to query")
+    args = parser.parse_args()
+
+    try:
+        filtered_pose_file = get_filtered_pose_file(args.record_id)
+        print(f"Filtered pose file for ID {args.record_id}: {filtered_pose_file}")
+        fps = get_fps(args.record_id)
+        print(f"FPS for ID {args.record_id}: {fps}")
+    except Exception as exc:
+        print(f"Error: {exc}")

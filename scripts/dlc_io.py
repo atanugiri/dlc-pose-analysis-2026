@@ -1,38 +1,25 @@
-from __future__ import annotations
-
 from pathlib import Path
-
 import pandas as pd
 
 
-def resolve_pose_path(filtered_pose_file: str, *, repo_root: Path | None = None) -> Path:
-    """Resolve a filtered pose path to an existing file on disk.
+def load_dlc_dataframe(filtered_pose_file, repo_root="."):
+    h5_path = Path(repo_root) / "data" / "filtered_pose_data" / filtered_pose_file
 
-    The DB may store either an absolute/relative path or just a filename.
-    If `repo_root` is not provided, uses `Path.cwd()`.
-    """
-    candidate = Path(filtered_pose_file)
-    if candidate.exists():
-        return candidate
+    if not h5_path.exists():
+        raise FileNotFoundError(f"File not found: {h5_path}")
 
-    root = Path.cwd() if repo_root is None else Path(repo_root)
-    for base in [root, root / "data" / "filtered_pose_data", root / "data" / "raw_pose_data"]:
-        alt = base / filtered_pose_file
-        if alt.exists():
-            return alt
-
-    raise FileNotFoundError(
-        f"Could not find pose file on disk. Tried: {filtered_pose_file!r} and common data/ locations."
-    )
+    return pd.read_hdf(h5_path, key="/df_with_missing")
 
 
-def load_dlc_dataframe(h5_path: Path, *, preferred_key: str = "/df_with_missing") -> pd.DataFrame:
-    """Load the main DeepLabCut DataFrame from an .h5 file."""
-    try:
-        return pd.read_hdf(h5_path, key=preferred_key)
-    except (KeyError, ValueError):
-        with pd.HDFStore(h5_path, mode="r") as store:
-            keys = list(store.keys())
-        if not keys:
-            raise ValueError(f"No HDF keys found in {h5_path}")
-        return pd.read_hdf(h5_path, key=keys[0])
+if __name__ == "__main__":
+    import argparse
+    import db_utils
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("record_id", type=int)
+    args = parser.parse_args()
+
+    filtered_pose_file = db_utils.get_filtered_pose_file(args.record_id)
+
+    df = load_dlc_dataframe(filtered_pose_file)
+    print(df.head())
