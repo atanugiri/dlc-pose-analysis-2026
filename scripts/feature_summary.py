@@ -3,8 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from scripts.motion_features import _compute_velocity_from_h5
-
 
 def summarize_feature(
     feature_df: pd.DataFrame,
@@ -57,4 +55,5 @@ if __name__ == "__main__":
 
         filtered_pose_file = db_utils.get_filtered_pose_file(args.record_id)
         df = motion_features._compute_velocity_from_h5(filtered_pose_file)
-        print(df.head())
+        summary = summarize_feature(df, feature_name="speed", how="mean")
+        print(summary)

@@ -8,6 +8,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.json
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
@@ -30,3 +31,4 @@ __pycache__/
 *.xlsx
 *.ppt
 *.pptx
+*.pickle

@@ -66,10 +66,10 @@ def compute_velocity_from_id(
     Uses:
     - db_utils.get_filtered_pose_file(id)
     - db_utils.get_fps(id) (falls back to 15 until you populate frame_rate)
-    - dlc_io.resolve_pose_path(...)
     """
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
-    pose_path = dlc_io.resolve_pose_path(filtered_pose_file)
+    repo_root = Path(__file__).resolve().parents[1]
+    pose_path = repo_root / "data" / "filtered_pose_data" / filtered_pose_file
     fps = db_utils.get_fps(record_id)
     return _compute_velocity_from_h5(pose_path, bodypart=bodypart, fps=fps)
 
@@ -107,3 +107,45 @@ def summarize_speed_from_ids(
         )
         for record_id in record_ids
     ]
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Compute summarized speed values for one or more record IDs."
+    )
+    parser.add_argument(
+        "record_ids",
+        nargs="+",
+        type=int,
+        help="One or more database record IDs.",
+    )
+    parser.add_argument(
+        "--bodypart",
+        default="Midback",
+        help="Bodypart name to use for velocity/speed computation.",
+    )
+    parser.add_argument(
+        "--how",
+        default="mean",
+        help="Summary method passed to feature_summary.summarize_feature (e.g., mean, median, max).",
+    )
+    parser.add_argument(
+        "--likelihood-min",
+        type=float,
+        default=None,
+        help="Optional minimum likelihood threshold.",
+    )
+
+    args = parser.parse_args()
+
+    values = summarize_speed_from_ids(
+        args.record_ids,
+        bodypart=args.bodypart,
+        how=args.how,
+        likelihood_min=args.likelihood_min,
+    )
+
+    for record_id, value in zip(args.record_ids, values):
+        print(f"{record_id}\t{value}")
+
