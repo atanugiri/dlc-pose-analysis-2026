@@ -27,6 +27,16 @@ def _connect():
     except Exception as exc:
         raise SystemExit(f"Database error: {exc}")
 
+def fetch_ids(query):
+    """Run a query and return list of IDs."""
+    conn = _connect()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            rows = cur.fetchall()
+        return [row[0] for row in rows]
+    finally:
+        conn.close()
 
 def get_filtered_pose_file(record_id: int) -> str:
     """Return experimental_metadata.filtered_pose_file for a given id."""
