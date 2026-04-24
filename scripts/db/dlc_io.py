@@ -9,17 +9,3 @@ def load_dlc_dataframe(filtered_pose_file, repo_root="."):
         raise FileNotFoundError(f"File not found: {h5_path}")
 
     return pd.read_hdf(h5_path, key="/df_with_missing")
-
-
-if __name__ == "__main__":
-    import argparse
-    import scripts.db.db_utils as db_utils
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("record_id", type=int)
-    args = parser.parse_args()
-
-    filtered_pose_file = db_utils.get_filtered_pose_file(args.record_id)
-
-    df = load_dlc_dataframe(filtered_pose_file)
-    print(df.head())
