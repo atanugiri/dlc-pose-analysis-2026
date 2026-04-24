@@ -46,8 +46,8 @@ def summarize_feature(
 
 if __name__ == "__main__":
         import argparse
-        import db_utils
-        import motion_features
+        import scripts.db.db_utils as db_utils
+        import scripts.features.motion_features as motion_features
 
         parser = argparse.ArgumentParser()
         parser.add_argument("record_id", type=int)

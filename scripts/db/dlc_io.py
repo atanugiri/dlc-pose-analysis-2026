@@ -13,7 +13,7 @@ def load_dlc_dataframe(filtered_pose_file, repo_root="."):
 
 if __name__ == "__main__":
     import argparse
-    import db_utils
+    import scripts.db.db_utils as db_utils
 
     parser = argparse.ArgumentParser()
     parser.add_argument("record_id", type=int)

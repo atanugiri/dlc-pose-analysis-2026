@@ -6,14 +6,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from .db import db_utils
+from ..db import dlc_io
+
 # Support running as a script (preferred): `python scripts/motion_features.py ...`
 # and importing in notebooks: `from scripts.motion_features import ...`
 try:
-    import db_utils
-    import dlc_io
-    import feature_summary
+    import scripts.db.db_utils as db_utils
+    import scripts.db.dlc_io as dlc_io
+    import scripts.pipelines.feature_summary as feature_summary
 except Exception:  # pragma: no cover
-    from . import db_utils, dlc_io, feature_summary  # type: ignore
+    from ..pipelines import feature_summary  # type: ignore
 
 
 def _compute_velocity_from_h5(
