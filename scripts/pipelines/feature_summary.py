@@ -43,17 +43,3 @@ def summarize_feature(
     if how_norm == "median":
         return float(values.median(skipna=True))
     raise ValueError("how must be 'mean' or 'median'")
-
-if __name__ == "__main__":
-        import argparse
-        import scripts.db.db_utils as db_utils
-        import scripts.features.motion_features as motion_features
-
-        parser = argparse.ArgumentParser()
-        parser.add_argument("record_id", type=int)
-        args = parser.parse_args()
-
-        filtered_pose_file = db_utils.get_filtered_pose_file(args.record_id)
-        df = motion_features._compute_velocity_from_h5(filtered_pose_file)
-        summary = summarize_feature(df, feature_name="speed", how="mean")
-        print(summary)

@@ -1,6 +1,8 @@
 from __future__ import annotations
+from pathlib import Path
+import pandas as pd
 
-from scripts.config import DEFAULT_FPS, DB_CONNECT_KWARGS
+from scripts.config import DEFAULT_FPS, DB_CONNECT_KWARGS, DATA_DIR
 
 
 def connect():
@@ -84,3 +86,12 @@ def get_fps(record_id: int | None = None) -> float:
 
     except Exception:
         return DEFAULT_FPS
+
+def load_dlc_dataframe(filtered_pose_file: str) -> pd.DataFrame:
+    """Load a filtered DLC h5 file from data/filtered_pose_data."""
+    h5_path = DATA_DIR / "filtered_pose_data" / filtered_pose_file
+
+    if not h5_path.exists():
+        raise FileNotFoundError(f"File not found: {h5_path}")
+
+    return pd.read_hdf(h5_path, key="/df_with_missing")
