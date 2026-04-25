@@ -1,22 +1,11 @@
-#!/usr/bin/env python3
 from __future__ import annotations
-
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
-from .db import db_utils
-from ..db import dlc_io
-
-# Support running as a script (preferred): `python scripts/motion_features.py ...`
-# and importing in notebooks: `from scripts.motion_features import ...`
-try:
-    import scripts.db.db_utils as db_utils
-    import scripts.db.dlc_io as dlc_io
-    import scripts.pipelines.feature_summary as feature_summary
-except Exception:  # pragma: no cover
-    from ..pipelines import feature_summary  # type: ignore
+import scripts.db.db_utils as db_utils
+import scripts.features.feature_summary as feature_summary
 
 
 def _compute_velocity_from_h5(
@@ -29,7 +18,8 @@ def _compute_velocity_from_h5(
     if fps <= 0:
         raise ValueError("fps must be > 0")
 
-    df = dlc_io.load_dlc_dataframe(h5_path)
+    df = db_utils.load_dlc_dataframe(h5_path.name)
+    
     if not isinstance(df.columns, pd.MultiIndex) or df.columns.nlevels < 3:
         raise ValueError(
             "Expected DLC-style MultiIndex columns (scorer, bodypart, coord). "
