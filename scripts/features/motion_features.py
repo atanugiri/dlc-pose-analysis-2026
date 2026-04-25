@@ -1,51 +1,62 @@
 from __future__ import annotations
 
+import argparse
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 import scripts.db.db_utils as db_utils
 import scripts.features.feature_summary as feature_summary
 
 
-def _compute_velocity_from_h5(
-    h5_path: Path,
+def compute_velocity_from_df(
+    df: pd.DataFrame,
     *,
     bodypart: str = "Midback",
     fps: float = db_utils.DEFAULT_FPS,
 ) -> pd.DataFrame:
-    """Compute per-frame (vx, vy, speed) for one bodypart from a DLC .h5."""
+    """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
     if fps <= 0:
         raise ValueError("fps must be > 0")
 
-    df = db_utils.load_dlc_dataframe(h5_path.name)
-    
     if not isinstance(df.columns, pd.MultiIndex) or df.columns.nlevels < 3:
         raise ValueError(
-            "Expected DLC-style MultiIndex columns (scorer, bodypart, coord). "
-            f"Got: {type(df.columns).__name__}"
+            "Expected DLC-style MultiIndex columns: scorer, bodypart, coord."
         )
 
     scorer = df.columns.get_level_values(0).unique().tolist()[0]
+
     if bodypart not in df[scorer].columns.get_level_values(0):
         available = df[scorer].columns.get_level_values(0).unique().tolist()
         raise ValueError(f"Bodypart {bodypart!r} not found. Available: {available}")
 
     coords = df[scorer][bodypart]
-    if not {"x", "y"}.issubset(set(coords.columns)):
-        raise ValueError(f"Bodypart {bodypart!r} is missing x/y columns. Found: {list(coords.columns)}")
+
+    if not {"x", "y"}.issubset(coords.columns):
+        raise ValueError(
+            f"Bodypart {bodypart!r} is missing x/y columns. Found: {list(coords.columns)}"
+        )
 
     x = coords["x"].astype(float)
     y = coords["y"].astype(float)
 
-    fps_f = float(fps)
-    vx = x.diff() * fps_f
-    vy = y.diff() * fps_f
+    vx = x.diff() * float(fps)
+    vy = y.diff() * float(fps)
     speed = np.hypot(vx, vy)
 
-    out = pd.DataFrame({"x": x, "y": y, "vx": vx, "vy": vy, "speed": speed})
+    out = pd.DataFrame(
+        {
+            "x": x,
+            "y": y,
+            "vx": vx,
+            "vy": vy,
+            "speed": speed,
+        }
+    )
+
     if "likelihood" in coords.columns:
         out["likelihood"] = coords["likelihood"].astype(float)
+
     return out
 
 
@@ -54,17 +65,12 @@ def compute_velocity_from_id(
     *,
     bodypart: str = "Midback",
 ) -> pd.DataFrame:
-    """Compute per-frame velocity for a DB record id.
-
-    Uses:
-    - db_utils.get_filtered_pose_file(id)
-    - db_utils.get_fps(id) (falls back to 15 until you populate frame_rate)
-    """
+    """Load one DB record and compute per-frame velocity."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
-    repo_root = Path(__file__).resolve().parents[1]
-    pose_path = repo_root / "data" / "filtered_pose_data" / filtered_pose_file
+    df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
-    return _compute_velocity_from_h5(pose_path, bodypart=bodypart, fps=fps)
+
+    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps)
 
 
 def summarize_speed(
@@ -73,9 +79,27 @@ def summarize_speed(
     how: str = "mean",
     likelihood_min: float | None = None,
 ) -> float:
+    """Summarize speed from a per-frame velocity DataFrame."""
     return feature_summary.summarize_feature(
         velocity_df,
         feature_name="speed",
+        how=how,
+        likelihood_min=likelihood_min,
+    )
+
+
+def summarize_speed_from_id(
+    record_id: int,
+    *,
+    bodypart: str = "Midback",
+    how: str = "mean",
+    likelihood_min: float | None = None,
+) -> float:
+    """Compute one scalar speed summary for one DB record id."""
+    velocity_df = compute_velocity_from_id(record_id, bodypart=bodypart)
+
+    return summarize_speed(
+        velocity_df,
         how=how,
         likelihood_min=likelihood_min,
     )
@@ -88,22 +112,19 @@ def summarize_speed_from_ids(
     how: str = "mean",
     likelihood_min: float | None = None,
 ) -> list[float]:
-    """Compute one scalar speed summary per record id.
-
-    Returns values in the same order as `record_ids`.
-    """
+    """Compute one scalar speed summary per record id."""
     return [
-        summarize_speed(
-            compute_velocity_from_id(record_id, bodypart=bodypart),
+        summarize_speed_from_id(
+            record_id,
+            bodypart=bodypart,
             how=how,
             likelihood_min=likelihood_min,
         )
         for record_id in record_ids
     ]
 
-if __name__ == "__main__":
-    import argparse
 
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Compute summarized speed values for one or more record IDs."
     )
@@ -121,7 +142,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--how",
         default="mean",
-        help="Summary method passed to feature_summary.summarize_feature (e.g., mean, median, max).",
+        choices=["mean", "median", "max", "std"],
+        help="Summary method.",
     )
     parser.add_argument(
         "--likelihood-min",
@@ -142,3 +164,6 @@ if __name__ == "__main__":
     for record_id, value in zip(args.record_ids, values):
         print(f"{record_id}\t{value}")
 
+
+if __name__ == "__main__":
+    main()
