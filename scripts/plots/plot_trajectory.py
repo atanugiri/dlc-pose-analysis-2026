@@ -19,7 +19,7 @@ def plot_trajectory_from_df(
     color_by_time: bool = False,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
-    x, y, _, time = dlc_utils.get_bodypart_xy_time(
+    x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
         df,
         bodypart=bodypart,
         fps=fps,

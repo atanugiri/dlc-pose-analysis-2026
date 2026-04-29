@@ -18,19 +18,19 @@ def compute_velocity_from_df(
     individual: str | None = None,
 ) -> pd.DataFrame:
     """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
-    x, y, likelihood, time = dlc_utils.get_bodypart_xy_time(
+    x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
         df,
         bodypart=bodypart,
         fps=fps,
         individual=individual,
     )
 
-    x = pd.Series(x, index=df.index).astype(float)
-    y = pd.Series(y, index=df.index).astype(float)
-    likelihood = pd.Series(likelihood, index=df.index).astype(float)
+    x = pd.Series(x, index=index).astype(float)
+    y = pd.Series(y, index=index).astype(float)
+    likelihood = pd.Series(likelihood, index=index).astype(float)
 
     if time is not None:
-        t = pd.Series(time, index=df.index).astype(float)
+        t = pd.Series(time, index=index).astype(float)
         dt = t.diff().replace(0, np.nan)
         vx = x.diff() / dt
         vy = y.diff() / dt
