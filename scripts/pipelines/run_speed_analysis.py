@@ -18,6 +18,11 @@ def main() -> None:
 
     parser.add_argument("--task", default="ChickenBroth")
     parser.add_argument("--bodypart", default="Midback")
+    parser.add_argument(
+        "--individual",
+        default=None,
+        help="Optional individual name for multi-animal files (e.g. 'm1').",
+    )
     parser.add_argument("--how", default="mean", choices=["mean", "median", "max", "std"])
     parser.add_argument("--likelihood-min", type=float, default=None)
 
@@ -52,6 +57,7 @@ def main() -> None:
         bodypart=args.bodypart,
         how=args.how,
         likelihood_min=args.likelihood_min,
+        individual=args.individual,
     )
 
     speed_ghrelin = summarize_speed_from_ids(
@@ -59,6 +65,7 @@ def main() -> None:
         bodypart=args.bodypart,
         how=args.how,
         likelihood_min=args.likelihood_min,
+        individual=args.individual,
     )
 
     summary_df = pd.DataFrame(

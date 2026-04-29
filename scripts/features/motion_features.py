@@ -14,12 +14,43 @@ def compute_velocity_from_df(
     *,
     bodypart: str = "Midback",
     fps: float = db_utils.DEFAULT_FPS,
+    individual: str | None = None,
 ) -> pd.DataFrame:
     """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
     if fps <= 0:
         raise ValueError("fps must be > 0")
 
-    if not isinstance(df.columns, pd.MultiIndex) or df.columns.nlevels < 3:
+    if not isinstance(df.columns, pd.MultiIndex):
+        raise ValueError(
+            "Expected DLC-style MultiIndex columns: scorer, bodypart, coord."
+        )
+
+    # Handle multi-animal files with 4-level columns: (scorer, individual, bodypart, coord)
+    # If present, require `individual` to be passed and convert to the 3-level
+    # format (scorer, bodypart, coord) expected by the rest of the function.
+    if df.columns.nlevels >= 4:
+        scorer = df.columns.get_level_values(0).unique().tolist()[0]
+        if individual is None:
+            available = df[scorer].columns.get_level_values(0).unique().tolist()
+            raise ValueError(
+                "DataFrame contains an individual level; pass `individual` (e.g. 'm1')"
+                f" to select one. Available individuals: {available}"
+            )
+
+        if individual not in df[scorer].columns.get_level_values(0):
+            available = df[scorer].columns.get_level_values(0).unique().tolist()
+            raise ValueError(f"Individual {individual!r} not found. Available: {available}")
+
+        coords = df[scorer][individual]
+
+        # coords currently has columns like (bodypart, coord). Rebuild a 3-level
+        # MultiIndex with scorer as the top level so downstream logic can remain.
+        tuples = [(scorer, bp, coord) for bp, coord in coords.columns]
+        new_cols = pd.MultiIndex.from_tuples(tuples, names=["scorer", "bodypart", "coord"])
+        coords.columns = new_cols
+        df = coords
+
+    if df.columns.nlevels < 3:
         raise ValueError(
             "Expected DLC-style MultiIndex columns: scorer, bodypart, coord."
         )
@@ -64,13 +95,14 @@ def compute_velocity_from_id(
     record_id: int,
     *,
     bodypart: str = "Midback",
+    individual: str | None = None,
 ) -> pd.DataFrame:
     """Load one DB record and compute per-frame velocity."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
 
-    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps)
+    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps, individual=individual)
 
 
 def summarize_speed(
@@ -94,9 +126,12 @@ def summarize_speed_from_id(
     bodypart: str = "Midback",
     how: str = "mean",
     likelihood_min: float | None = None,
+    individual: str | None = None,
 ) -> float:
     """Compute one scalar speed summary for one DB record id."""
-    velocity_df = compute_velocity_from_id(record_id, bodypart=bodypart)
+    velocity_df = compute_velocity_from_id(
+        record_id, bodypart=bodypart, individual=individual
+    )
 
     return summarize_speed(
         velocity_df,
@@ -111,6 +146,7 @@ def summarize_speed_from_ids(
     bodypart: str = "Midback",
     how: str = "mean",
     likelihood_min: float | None = None,
+    individual: str | None = None,
 ) -> list[float]:
     """Compute one scalar speed summary per record id."""
     return [
@@ -119,6 +155,7 @@ def summarize_speed_from_ids(
             bodypart=bodypart,
             how=how,
             likelihood_min=likelihood_min,
+            individual=individual,
         )
         for record_id in record_ids
     ]
