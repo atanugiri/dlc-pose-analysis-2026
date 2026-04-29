@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 import scripts.db.db_utils as db_utils
+import scripts.utils.dlc_utils as dlc_utils
 import scripts.features.feature_summary as feature_summary
 
 
@@ -17,62 +18,28 @@ def compute_velocity_from_df(
     individual: str | None = None,
 ) -> pd.DataFrame:
     """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
-    if fps <= 0:
-        raise ValueError("fps must be > 0")
+    x, y, likelihood, time = dlc_utils.get_bodypart_xy_time(
+        df,
+        bodypart=bodypart,
+        fps=fps,
+        individual=individual,
+    )
 
-    if not isinstance(df.columns, pd.MultiIndex):
-        raise ValueError(
-            "Expected DLC-style MultiIndex columns: scorer, bodypart, coord."
-        )
+    x = pd.Series(x, index=df.index).astype(float)
+    y = pd.Series(y, index=df.index).astype(float)
+    likelihood = pd.Series(likelihood, index=df.index).astype(float)
 
-    # Handle multi-animal files with 4-level columns: (scorer, individual, bodypart, coord)
-    # If present, require `individual` to be passed and convert to the 3-level
-    # format (scorer, bodypart, coord) expected by the rest of the function.
-    if df.columns.nlevels >= 4:
-        scorer = df.columns.get_level_values(0).unique().tolist()[0]
-        if individual is None:
-            available = df[scorer].columns.get_level_values(0).unique().tolist()
-            raise ValueError(
-                "DataFrame contains an individual level; pass `individual` (e.g. 'm1')"
-                f" to select one. Available individuals: {available}"
-            )
+    if time is not None:
+        t = pd.Series(time, index=df.index).astype(float)
+        dt = t.diff().replace(0, np.nan)
+        vx = x.diff() / dt
+        vy = y.diff() / dt
+    else:
+        if fps <= 0:
+            raise ValueError("fps must be > 0")
+        vx = x.diff() * float(fps)
+        vy = y.diff() * float(fps)
 
-        if individual not in df[scorer].columns.get_level_values(0):
-            available = df[scorer].columns.get_level_values(0).unique().tolist()
-            raise ValueError(f"Individual {individual!r} not found. Available: {available}")
-
-        coords = df[scorer][individual]
-
-        # coords currently has columns like (bodypart, coord). Rebuild a 3-level
-        # MultiIndex with scorer as the top level so downstream logic can remain.
-        tuples = [(scorer, bp, coord) for bp, coord in coords.columns]
-        new_cols = pd.MultiIndex.from_tuples(tuples, names=["scorer", "bodypart", "coord"])
-        coords.columns = new_cols
-        df = coords
-
-    if df.columns.nlevels < 3:
-        raise ValueError(
-            "Expected DLC-style MultiIndex columns: scorer, bodypart, coord."
-        )
-
-    scorer = df.columns.get_level_values(0).unique().tolist()[0]
-
-    if bodypart not in df[scorer].columns.get_level_values(0):
-        available = df[scorer].columns.get_level_values(0).unique().tolist()
-        raise ValueError(f"Bodypart {bodypart!r} not found. Available: {available}")
-
-    coords = df[scorer][bodypart]
-
-    if not {"x", "y"}.issubset(coords.columns):
-        raise ValueError(
-            f"Bodypart {bodypart!r} is missing x/y columns. Found: {list(coords.columns)}"
-        )
-
-    x = coords["x"].astype(float)
-    y = coords["y"].astype(float)
-
-    vx = x.diff() * float(fps)
-    vy = y.diff() * float(fps)
     speed = np.hypot(vx, vy)
 
     out = pd.DataFrame(
@@ -84,10 +51,11 @@ def compute_velocity_from_df(
             "speed": speed,
         }
     )
-
-    if "likelihood" in coords.columns:
-        out["likelihood"] = coords["likelihood"].astype(float)
-
+    # Include likelihood (from dlc_utils.get_bodypart_xy_time) and time
+    # if available so downstream code can use them directly.
+    out["likelihood"] = likelihood
+    if time is not None:
+        out["time"] = t
     return out
 
 
