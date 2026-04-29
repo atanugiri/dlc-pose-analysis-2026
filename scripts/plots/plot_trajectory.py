@@ -19,7 +19,7 @@ def plot_trajectory_from_df(
     color_by_time: bool = False,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
-    x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
+    x, y, likelihood, time, _ = dlc_utils.get_bodypart_xy_time(
         df,
         bodypart=bodypart,
         fps=fps,
@@ -74,10 +74,12 @@ def plot_trajectory_from_ids(
     for record_id in record_ids:
         filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
         df = db_utils.load_dlc_dataframe(filtered_pose_file)
+        fps = db_utils.get_fps(record_id)
 
-        x, y = dlc_utils.get_bodypart_xy(
+        x, y, _, _, _ = dlc_utils.get_bodypart_xy_time(
             df,
             bodypart=bodypart,
+            fps=fps,
             individual=individual,
         )
 

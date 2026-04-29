@@ -18,44 +18,26 @@ def compute_velocity_from_df(
     individual: str | None = None,
 ) -> pd.DataFrame:
     """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
+    if fps <= 0:
+        raise ValueError("fps must be > 0")
+
     x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
-        df,
-        bodypart=bodypart,
-        fps=fps,
-        individual=individual,
+        df, bodypart=bodypart, fps=fps, individual=individual
     )
 
-    x = pd.Series(x, index=index).astype(float)
-    y = pd.Series(y, index=index).astype(float)
-    likelihood = pd.Series(likelihood, index=index).astype(float)
+    x = pd.Series(x, index=index, dtype=float)
+    y = pd.Series(y, index=index, dtype=float)
+    likelihood = pd.Series(likelihood, index=index, dtype=float)
+    t = pd.Series(time, index=index).astype(float)
 
-    if time is not None:
-        t = pd.Series(time, index=index).astype(float)
-        dt = t.diff().replace(0, np.nan)
-        vx = x.diff() / dt
-        vy = y.diff() / dt
-    else:
-        if fps <= 0:
-            raise ValueError("fps must be > 0")
-        vx = x.diff() * float(fps)
-        vy = y.diff() * float(fps)
+    dt = t.diff().replace(0, np.nan)
+    vx = x.diff() / dt
+    vy = y.diff() / dt
 
     speed = np.hypot(vx, vy)
 
-    out = pd.DataFrame(
-        {
-            "x": x,
-            "y": y,
-            "vx": vx,
-            "vy": vy,
-            "speed": speed,
-        }
-    )
-    # Include likelihood (from dlc_utils.get_bodypart_xy_time) and time
-    # if available so downstream code can use them directly.
-    out["likelihood"] = likelihood
-    if time is not None:
-        out["time"] = t
+    out = pd.DataFrame({"time": t, "x": x, "y": y, "vx": vx, "vy": vy, "speed": speed, "likelihood": likelihood})
+
     return out
 
 
