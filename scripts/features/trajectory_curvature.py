@@ -143,7 +143,6 @@ def summarize_curvature_from_id(
         curvature_df,
         how=how,
         likelihood_min=likelihood_min,
-        speed_thresh=speed_thresh,
     )
 
 
