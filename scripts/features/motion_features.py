@@ -17,13 +17,14 @@ def compute_velocity_from_df(
     fps: float = db_utils.DEFAULT_FPS,
     individual: str | None = None,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ) -> pd.DataFrame:
     """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
     if fps <= 0:
         raise ValueError("fps must be > 0")
 
     x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
-        df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window
+        df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold
     )
 
     x = pd.Series(x, index=index, dtype=float)
@@ -48,13 +49,14 @@ def compute_velocity_from_id(
     bodypart: str = "Midback",
     individual: str | None = None,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ) -> pd.DataFrame:
     """Load one DB record and compute per-frame velocity."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
 
-    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window)
+    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold)
 
 
 def summarize_speed(
@@ -80,10 +82,11 @@ def summarize_speed_from_id(
     likelihood_min: float | None = None,
     individual: str | None = None,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ) -> float:
     """Compute one scalar speed summary for one DB record id."""
     velocity_df = compute_velocity_from_id(
-        record_id, bodypart=bodypart, individual=individual, smoothing_window=smoothing_window
+        record_id, bodypart=bodypart, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold
     )
 
     return summarize_speed(
@@ -101,6 +104,7 @@ def summarize_speed_from_ids(
     likelihood_min: float | None = None,
     individual: str | None = None,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ) -> list[float]:
     """Compute one scalar speed summary per record id."""
     return [
@@ -111,6 +115,7 @@ def summarize_speed_from_ids(
             likelihood_min=likelihood_min,
             individual=individual,
             smoothing_window=smoothing_window,
+            likelihood_threshold=likelihood_threshold,
         )
         for record_id in record_ids
     ]

@@ -31,6 +31,12 @@ def main() -> None:
         default=None,
         help="Optional smoothing window size for trajectory smoothing.",
     )
+    parser.add_argument(
+        "--likelihood-threshold",
+        type=float,
+        default=0.5,
+        help="Likelihood threshold for filtering low-confidence poses.",
+    )
 
     args = parser.parse_args()
 
@@ -65,6 +71,7 @@ def main() -> None:
         likelihood_min=args.likelihood_min,
         individual=args.individual,
         smoothing_window=args.smoothing_window,
+        likelihood_threshold=args.likelihood_threshold,
     )
 
     speed_ghrelin = summarize_speed_from_ids(
@@ -74,6 +81,7 @@ def main() -> None:
         likelihood_min=args.likelihood_min,
         individual=args.individual,
         smoothing_window=args.smoothing_window,
+        likelihood_threshold=args.likelihood_threshold,
     )
 
     summary_df = pd.DataFrame(
