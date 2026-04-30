@@ -36,6 +36,12 @@ def main() -> None:
         default=0.01,
         help="Speed threshold for filtering low-speed frames.",
     )
+    parser.add_argument(
+        "--likelihood-threshold",
+        type=float,
+        default=0.5,
+        help="Likelihood threshold for filtering low-confidence poses.",
+    )
 
     args = parser.parse_args()
     RESULTS_DIR.mkdir(exist_ok=True)
@@ -70,6 +76,7 @@ def main() -> None:
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         speed_thresh=args.speed_thresh,
+        likelihood_threshold=args.likelihood_threshold,
     )
 
     curvature_ghrelin = summarize_curvature_from_ids(
@@ -80,6 +87,7 @@ def main() -> None:
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         speed_thresh=args.speed_thresh,
+        likelihood_threshold=args.likelihood_threshold,
     )
 
     summary_df = pd.DataFrame(

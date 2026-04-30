@@ -12,6 +12,7 @@ def get_bodypart_xy_time(
     fps: float,
     individual: str | None = None,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.Index]:
     """Extract valid x, y, likelihood, time, and index for one bodypart.
 
@@ -52,6 +53,19 @@ def get_bodypart_xy_time(
     x = coords["x"].astype(float).to_numpy()
     y = coords["y"].astype(float).to_numpy()
     likelihood = coords["likelihood"].astype(float).to_numpy()
+
+    # Set low-likelihood x/y to NaN and interpolate when thresholding is enabled
+    if likelihood_threshold is not None:
+        thr = float(likelihood_threshold)
+        low_mask = likelihood < thr
+        if low_mask.any():
+            x = x.copy()
+            y = y.copy()
+            x[low_mask] = np.nan
+            y[low_mask] = np.nan
+            # interpolate NaNs in x/y in both directions
+            x = pd.Series(x).interpolate(limit_direction="both").to_numpy()
+            y = pd.Series(y).interpolate(limit_direction="both").to_numpy()
 
     if smoothing_window is not None:
         if smoothing_window < 1:
