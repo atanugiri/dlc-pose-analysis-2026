@@ -25,6 +25,12 @@ def main() -> None:
     )
     parser.add_argument("--how", default="mean", choices=["mean", "median", "max", "std"])
     parser.add_argument("--likelihood-min", type=float, default=None)
+    parser.add_argument(
+        "--smoothing-window",
+        type=int,
+        default=None,
+        help="Optional smoothing window size for trajectory smoothing.",
+    )
 
     args = parser.parse_args()
 
@@ -58,6 +64,7 @@ def main() -> None:
         how=args.how,
         likelihood_min=args.likelihood_min,
         individual=args.individual,
+        smoothing_window=args.smoothing_window,
     )
 
     speed_ghrelin = summarize_speed_from_ids(
@@ -66,6 +73,7 @@ def main() -> None:
         how=args.how,
         likelihood_min=args.likelihood_min,
         individual=args.individual,
+        smoothing_window=args.smoothing_window,
     )
 
     summary_df = pd.DataFrame(

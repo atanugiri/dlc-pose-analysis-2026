@@ -17,6 +17,7 @@ def plot_trajectory_from_df(
     fps: float = db_utils.DEFAULT_FPS,
     individual: str | None = None,
     color_by_time: bool = False,
+    smoothing_window: int | None = None,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
     x, y, likelihood, time, _ = dlc_utils.get_bodypart_xy_time(
@@ -24,6 +25,7 @@ def plot_trajectory_from_df(
         bodypart=bodypart,
         fps=fps,
         individual=individual,
+        smoothing_window=smoothing_window,
     )
 
     plt.figure(figsize=(6, 6))
@@ -46,6 +48,7 @@ def plot_trajectory_from_id(
     bodypart: str = "Midback",
     individual: str | None = None,
     color_by_time: bool = False,
+    smoothing_window: int | None = None,
 ):
     """Plot trajectory of a bodypart from a record ID."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
@@ -58,6 +61,7 @@ def plot_trajectory_from_id(
         fps=fps,
         individual=individual,
         color_by_time=color_by_time,
+        smoothing_window=smoothing_window,
     )
 
 def plot_trajectory_from_ids(
@@ -67,6 +71,7 @@ def plot_trajectory_from_ids(
     individual: str | None = None,
     linewidth: float = 1.0,
     alpha: float = 0.7,
+    smoothing_window: int | None = None,
 ):
     """Overlay smooth trajectories of a bodypart from multiple record IDs."""
     plt.figure(figsize=(6, 6))
@@ -81,6 +86,7 @@ def plot_trajectory_from_ids(
             bodypart=bodypart,
             fps=fps,
             individual=individual,
+            smoothing_window=smoothing_window,
         )
 
         plt.plot(
@@ -107,10 +113,17 @@ if __name__ == "__main__":
     parser.add_argument("ids", nargs="+", type=int, help="One or more record IDs to plot")
     parser.add_argument("--bodypart", default="Midback", help="Bodypart to plot")
     parser.add_argument("--individual", default=None, help="Individual (for multi-animal data)")
+    parser.add_argument(
+        "--smoothing-window",
+        type=int,
+        default=None,
+        help="Optional smoothing window size for trajectory smoothing.",
+    )
     args = parser.parse_args()
 
     plot_trajectory_from_ids(
         args.ids,
         bodypart=args.bodypart,
         individual=args.individual,
+        smoothing_window=args.smoothing_window,
     )
