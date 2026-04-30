@@ -23,7 +23,6 @@ def main() -> None:
         help="Optional individual name for multi-animal files (e.g. 'm1').",
     )
     parser.add_argument("--how", default="mean", choices=["mean", "median", "max", "std"])
-    parser.add_argument("--likelihood-min", type=float, default=None)
     parser.add_argument(
         "--smoothing-window",
         type=int,
@@ -72,7 +71,6 @@ def main() -> None:
         saline_ids,
         bodypart=args.bodypart,
         how=args.how,
-        likelihood_min=args.likelihood_min,
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         speed_thresh=args.speed_thresh,
@@ -83,7 +81,6 @@ def main() -> None:
         ghrelin_ids,
         bodypart=args.bodypart,
         how=args.how,
-        likelihood_min=args.likelihood_min,
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         speed_thresh=args.speed_thresh,

@@ -107,7 +107,6 @@ def summarize_curvature(
     curvature_df: pd.DataFrame,
     *,
     how: str = "mean",
-    likelihood_min: float | None = None,
 ) -> float:
     """Summarize curvature from a per-frame curvature DataFrame.
     
@@ -118,7 +117,6 @@ def summarize_curvature(
         curvature_df,
         feature_name="curvature",
         how=how,
-        likelihood_min=likelihood_min,
     )
 
 
@@ -127,7 +125,6 @@ def summarize_curvature_from_id(
     *,
     bodypart: str = "Midback",
     how: str = "mean",
-    likelihood_min: float | None = None,
     individual: str | None = None,
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
@@ -146,7 +143,6 @@ def summarize_curvature_from_id(
     return summarize_curvature(
         curvature_df,
         how=how,
-        likelihood_min=likelihood_min,
     )
 
 
@@ -155,7 +151,6 @@ def summarize_curvature_from_ids(
     *,
     bodypart: str = "Midback",
     how: str = "mean",
-    likelihood_min: float | None = None,
     individual: str | None = None,
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
@@ -167,7 +162,6 @@ def summarize_curvature_from_ids(
             record_id,
             bodypart=bodypart,
             how=how,
-            likelihood_min=likelihood_min,
             individual=individual,
             smoothing_window=smoothing_window,
             speed_thresh=speed_thresh,

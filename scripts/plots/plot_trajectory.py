@@ -18,6 +18,7 @@ def plot_trajectory_from_df(
     individual: str | None = None,
     color_by_time: bool = False,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
     x, y, likelihood, time, _ = dlc_utils.get_bodypart_xy_time(
@@ -26,6 +27,7 @@ def plot_trajectory_from_df(
         fps=fps,
         individual=individual,
         smoothing_window=smoothing_window,
+        likelihood_threshold=likelihood_threshold,
     )
 
     plt.figure(figsize=(6, 6))
@@ -49,6 +51,7 @@ def plot_trajectory_from_id(
     individual: str | None = None,
     color_by_time: bool = False,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ):
     """Plot trajectory of a bodypart from a record ID."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
@@ -62,6 +65,7 @@ def plot_trajectory_from_id(
         individual=individual,
         color_by_time=color_by_time,
         smoothing_window=smoothing_window,
+        likelihood_threshold=likelihood_threshold,
     )
 
 def plot_trajectory_from_ids(
@@ -72,6 +76,7 @@ def plot_trajectory_from_ids(
     linewidth: float = 1.0,
     alpha: float = 0.7,
     smoothing_window: int | None = None,
+    likelihood_threshold: float | None = 0.5,
 ):
     """Overlay smooth trajectories of a bodypart from multiple record IDs."""
     plt.figure(figsize=(6, 6))
@@ -87,6 +92,7 @@ def plot_trajectory_from_ids(
             fps=fps,
             individual=individual,
             smoothing_window=smoothing_window,
+            likelihood_threshold=likelihood_threshold,
         )
 
         plt.plot(
@@ -119,6 +125,12 @@ if __name__ == "__main__":
         default=None,
         help="Optional smoothing window size for trajectory smoothing.",
     )
+    parser.add_argument(
+        "--likelihood-threshold",
+        type=float,
+        default=0.5,
+        help="Likelihood threshold for filtering low-confidence poses.",
+    )
     args = parser.parse_args()
 
     plot_trajectory_from_ids(
@@ -126,4 +138,5 @@ if __name__ == "__main__":
         bodypart=args.bodypart,
         individual=args.individual,
         smoothing_window=args.smoothing_window,
+        likelihood_threshold=args.likelihood_threshold,
     )

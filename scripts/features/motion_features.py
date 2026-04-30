@@ -63,14 +63,12 @@ def summarize_speed(
     velocity_df: pd.DataFrame,
     *,
     how: str = "mean",
-    likelihood_min: float | None = None,
 ) -> float:
     """Summarize speed from a per-frame velocity DataFrame."""
     return feature_summary.summarize_feature(
         velocity_df,
         feature_name="speed",
         how=how,
-        likelihood_min=likelihood_min,
     )
 
 
@@ -92,7 +90,6 @@ def summarize_speed_from_id(
     return summarize_speed(
         velocity_df,
         how=how,
-        likelihood_min=likelihood_min,
     )
 
 

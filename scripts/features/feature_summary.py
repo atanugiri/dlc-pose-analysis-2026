@@ -9,7 +9,6 @@ def summarize_feature(
     *,
     feature_name: str,
     how: str = "mean",
-    likelihood_min: float | None = None,
 ) -> float:
     """Summarize a scalar feature column from a per-frame feature DataFrame."""
     if feature_name not in feature_df.columns:
@@ -18,9 +17,6 @@ def summarize_feature(
         )
 
     values = feature_df[feature_name].replace([np.inf, -np.inf], np.nan)
-
-    if likelihood_min is not None and "likelihood" in feature_df.columns:
-        values = values.where(feature_df["likelihood"] >= float(likelihood_min))
 
     how_norm = how.strip().lower()
 
