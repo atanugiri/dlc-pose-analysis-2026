@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.ndimage import uniform_filter1d
 
 
 def get_bodypart_xy_time(
@@ -10,8 +11,14 @@ def get_bodypart_xy_time(
     bodypart: str = "Midback",
     fps: float,
     individual: str | None = None,
+    smoothing_window: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.Index]:
-    """Extract valid x, y, likelihood, time, and index for one bodypart."""
+    """Extract valid x, y, likelihood, time, and index for one bodypart.
+
+    If provided, `smoothing_window` applies a moving-average smoothing
+    (`uniform_filter1d`, nearest-edge padding) to the x/y trajectory before
+    filtering valid samples.
+    """
     if not isinstance(df.columns, pd.MultiIndex):
         raise ValueError("Expected DLC-style MultiIndex columns.")
 
@@ -45,6 +52,17 @@ def get_bodypart_xy_time(
     x = coords["x"].astype(float).to_numpy()
     y = coords["y"].astype(float).to_numpy()
     likelihood = coords["likelihood"].astype(float).to_numpy()
+
+    if smoothing_window is not None:
+        if smoothing_window < 1:
+            raise ValueError("smoothing_window must be a positive integer or None.")
+        w = int(smoothing_window)
+        if w > 1:
+            if w % 2 == 0:
+                w += 1
+            w = max(3, w)
+            x = uniform_filter1d(x, size=w, mode="nearest")
+            y = uniform_filter1d(y, size=w, mode="nearest")
 
     frame_number = np.arange(len(coords))
     time = frame_number / fps
