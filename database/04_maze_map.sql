@@ -11,6 +11,7 @@ CREATE TABLE maze_map (
     CHECK (end_date >= start_date)      
 );
 
+-- Insert data for ChickenBroth task
 INSERT INTO maze_map (task, genotype, animal_name, start_date, end_date, maze_number) 
 VALUES 
 ('ChickenBroth', 'black', 'Teddy', '2024-07-01', '2024-07-30', 1),
@@ -32,6 +33,7 @@ VALUES
 ('ChickenBroth', 'black', 'Pinky', '2024-07-01', '2024-07-30', 3),
 ('ChickenBroth', 'black', 'Sky', '2024-07-01', '2024-07-30', 4);
 
+-- Insert data for ChocolateMilk task
 INSERT INTO maze_map (task, genotype, animal_name, start_date, end_date, maze_number) 
 VALUES 
 ('ChocolateMilk', 'black', 'Teddy', '2024-07-01', '2024-07-04', 1),
@@ -62,6 +64,7 @@ VALUES
 ('ChocolateMilk', 'black', 'Pinky', '2024-07-03', '2024-07-04', 2),
 ('ChocolateMilk', 'black', 'Sky', '2024-07-03', '2024-07-04', 4);
 
+-- Insert data for ToyRAT task
 INSERT INTO maze_map (task, genotype, animal_name, start_date, end_date, maze_number)
 VALUES 
 ('ToyRAT', 'black', 'Joey', '2023-10-02', '2023-10-02', 2),
@@ -86,3 +89,21 @@ VALUES
 ('ToyRAT', 'black', 'Stitch', '2023-10-31', '2023-11-27', 3),
 ('ToyRAT', 'black', 'Bastet', '2023-10-31', '2023-11-27', 4),
 ('ToyRAT', 'black', 'Judy', '2023-11-02', '2023-11-02', 3);
+
+-- Insert data for ToyStick task
+INSERT INTO maze_map (task, genotype, animal_name, start_date, end_date, maze_number) 
+VALUES 
+('ToyStick', 'black', 'Susan', '2023-10-24', '2023-10-26', 1),
+('ToyStick', 'black', 'Linda', '2023-10-03', '2023-10-26', 2),
+('ToyStick', 'black', 'Julie', '2023-10-03', '2023-10-26', 3),
+('ToyStick', 'black', 'Pheobe', '2023-10-03', '2023-11-02', 4),
+('ToyStick', 'black', 'Judy', '2023-10-24', '2023-10-24', 4),
+('ToyStick', 'black', 'Judy', '2023-10-31', '2023-11-09', 3),
+('ToyStick', 'black', 'Lilo', '2023-10-24', '2023-11-09', 4),
+('ToyStick', 'black', 'Teddy', '2023-10-25', '2023-11-15', 1),
+('ToyStick', 'black', 'Joey', '2023-10-16', '2023-11-15', 2),
+('ToyStick', 'black', 'Bob', '2023-10-16', '2023-11-15', 3),
+('ToyStick', 'black', 'Ross', '2023-10-16', '2023-11-15', 4),
+('ToyStick', 'black', 'Loki', '2023-11-06', '2023-11-15', 1),
+('ToyStick', 'black', 'Hermes', '2023-11-06', '2023-11-15', 2),
+('ToyStick', 'black', 'Gunther', '2023-11-06', '2023-11-15', 4);
