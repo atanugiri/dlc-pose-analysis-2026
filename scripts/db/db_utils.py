@@ -54,7 +54,6 @@ def get_filtered_pose_file(record_id: int) -> str:
 
     return str(row[0])
 
-
 def get_fps(record_id: int | None = None) -> float:
     """Return FPS for a record id, falling back to DEFAULT_FPS."""
     if record_id is None:
@@ -106,6 +105,28 @@ def get_frame_dimensions(record_id: int) -> tuple[int, int]:
         raise ValueError(f"No frame dimensions found for ID: {record_id}")
 
     return (int(row[0]), int(row[1]))
+
+def get_maze_number(record_id: int) -> int | None:
+    """Return maze_number for a record ID, or None when it is unavailable."""
+    conn = connect()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT maze_number
+                FROM public.experimental_metadata
+                WHERE id = %s
+                """,
+                (record_id,),
+            )
+            row = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not row or row[0] is None:
+        return None
+
+    return int(row[0])
 
 def load_dlc_dataframe(filtered_pose_file: str) -> pd.DataFrame:
     """Load a filtered DLC h5 file from data/filtered_pose_data."""
