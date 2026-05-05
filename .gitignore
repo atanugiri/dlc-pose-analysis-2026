@@ -33,3 +33,6 @@ __pycache__/
 *.pptx
 *.pickle
 *.png
+
+# Notebook
+*.ipynb
