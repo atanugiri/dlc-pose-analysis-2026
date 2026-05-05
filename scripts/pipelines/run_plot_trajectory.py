@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
-from scripts.plots.plot_trajectory import plot_trajectory_from_ids
+from scripts.plots.plot_trajectory_old import plot_trajectory_from_ids
 
 
 def main() -> None:
