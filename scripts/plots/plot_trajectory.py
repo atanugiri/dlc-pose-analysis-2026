@@ -19,6 +19,7 @@ def plot_trajectory_from_df(
     color_by_time: bool = False,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    frame_height: int | None = None,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
     x, y, likelihood, time, _ = dlc_utils.get_bodypart_xy_time(
@@ -29,6 +30,10 @@ def plot_trajectory_from_df(
         smoothing_window=smoothing_window,
         likelihood_threshold=likelihood_threshold,
     )
+
+    # Invert y-axis if frame_height is provided (DeepLabCut inverts y-scale)
+    if frame_height is not None:
+        y = frame_height - y
 
     plt.figure(figsize=(6, 6))
 
@@ -57,6 +62,7 @@ def plot_trajectory_from_id(
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
+    _, frame_height = db_utils.get_frame_dimensions(record_id)
 
     plot_trajectory_from_df(
         df,
@@ -66,6 +72,7 @@ def plot_trajectory_from_id(
         color_by_time=color_by_time,
         smoothing_window=smoothing_window,
         likelihood_threshold=likelihood_threshold,
+        frame_height=frame_height,
     )
 
 def plot_trajectory_from_ids(
@@ -85,6 +92,7 @@ def plot_trajectory_from_ids(
         filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
         df = db_utils.load_dlc_dataframe(filtered_pose_file)
         fps = db_utils.get_fps(record_id)
+        _, frame_height = db_utils.get_frame_dimensions(record_id)
 
         x, y, _, _, _ = dlc_utils.get_bodypart_xy_time(
             df,
@@ -94,6 +102,9 @@ def plot_trajectory_from_ids(
             smoothing_window=smoothing_window,
             likelihood_threshold=likelihood_threshold,
         )
+
+        # Invert y-axis (DeepLabCut inverts y-scale)
+        y = frame_height - y
 
         plt.plot(
             x,

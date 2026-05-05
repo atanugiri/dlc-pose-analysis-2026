@@ -96,6 +96,28 @@ def get_fps(record_id: int | None = None) -> float:
     except Exception:
         return DEFAULT_FPS
 
+def get_frame_dimensions(record_id: int) -> tuple[int, int]:
+    """Return (frame_width, frame_height) for a record ID."""
+    conn = connect()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT frame_width, frame_height
+                FROM public.experimental_metadata
+                WHERE id = %s
+                """,
+                (record_id,),
+            )
+            row = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not row or row[0] is None or row[1] is None:
+        raise ValueError(f"No frame dimensions found for ID: {record_id}")
+
+    return (int(row[0]), int(row[1]))
+
 def load_dlc_dataframe(filtered_pose_file: str) -> pd.DataFrame:
     """Load a filtered DLC h5 file from data/filtered_pose_data."""
     h5_path = DATA_DIR / "filtered_pose_data" / filtered_pose_file
