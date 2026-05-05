@@ -22,17 +22,6 @@ def connect():
     except Exception as exc:
         raise SystemExit(f"Database error: {exc}")
 
-
-def fetch_ids(query: str) -> list[int]:
-    """Run a query and return list of IDs."""
-    conn = connect()
-    try:
-        with conn.cursor() as cur:
-            cur.execute(query)
-            return [row[0] for row in cur.fetchall()]
-    finally:
-        conn.close()
-
 def fetch_ids_with_params(query: str, params: tuple) -> list[int]:
     """Run a parameterized query and return list of IDs."""
     conn = connect()
