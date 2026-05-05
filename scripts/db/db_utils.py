@@ -103,7 +103,7 @@ def get_frame_dimensions(record_id: int) -> tuple[int, int]:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT frame_width, frame_height
+                SELECT width, height
                 FROM public.experimental_metadata
                 WHERE id = %s
                 """,

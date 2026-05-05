@@ -19,6 +19,7 @@ def plot_trajectory_from_df(
     color_by_time: bool = False,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    frame_width: int | None = None,
     frame_height: int | None = None,
 ):
     """Plot a single smooth trajectory from a DLC DataFrame."""
@@ -47,6 +48,12 @@ def plot_trajectory_from_df(
     plt.xlabel("X position")
     plt.ylabel("Y position")
     plt.gca().set_aspect("equal", adjustable="box")
+    
+    # Set axis limits based on frame dimensions
+    if frame_width is not None and frame_height is not None:
+        plt.xlim(0, frame_width)
+        plt.ylim(0, frame_height)
+    
     plt.show()
 
 def plot_trajectory_from_id(
@@ -62,7 +69,7 @@ def plot_trajectory_from_id(
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
-    _, frame_height = db_utils.get_frame_dimensions(record_id)
+    frame_width, frame_height = db_utils.get_frame_dimensions(record_id)
 
     plot_trajectory_from_df(
         df,
@@ -72,6 +79,7 @@ def plot_trajectory_from_id(
         color_by_time=color_by_time,
         smoothing_window=smoothing_window,
         likelihood_threshold=likelihood_threshold,
+        frame_width=frame_width,
         frame_height=frame_height,
     )
 
@@ -87,12 +95,19 @@ def plot_trajectory_from_ids(
 ):
     """Overlay smooth trajectories of a bodypart from multiple record IDs."""
     plt.figure(figsize=(6, 6))
+    
+    # Get frame dimensions from the first record for consistent axis limits
+    frame_width, frame_height = db_utils.get_frame_dimensions(record_ids[0])
 
     for record_id in record_ids:
         filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
         df = db_utils.load_dlc_dataframe(filtered_pose_file)
         fps = db_utils.get_fps(record_id)
-        _, frame_height = db_utils.get_frame_dimensions(record_id)
+        width, height = db_utils.get_frame_dimensions(record_id)
+        
+        # Use first record's dimensions; warning if they differ
+        if width != frame_width or height != frame_height:
+            print(f"Warning: Record {record_id} has different dimensions ({width}x{height}) than first record ({frame_width}x{frame_height})")
 
         x, y, _, _, _ = dlc_utils.get_bodypart_xy_time(
             df,
@@ -104,7 +119,7 @@ def plot_trajectory_from_ids(
         )
 
         # Invert y-axis (DeepLabCut inverts y-scale)
-        y = frame_height - y
+        y = height - y
 
         plt.plot(
             x,
@@ -118,6 +133,10 @@ def plot_trajectory_from_ids(
     plt.xlabel("X position")
     plt.ylabel("Y position")
     plt.gca().set_aspect("equal", adjustable="box")
+    
+    # Set axis limits based on frame dimensions
+    plt.xlim(0, frame_width)
+    plt.ylim(0, frame_height)
 
     if len(record_ids) <= 10:
         plt.legend(frameon=False)
