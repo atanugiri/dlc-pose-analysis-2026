@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
-from scripts.features.angle_features import summarize_angle_features_from_ids
+from scripts.features.angle_features import batch_angle_features
 from scripts.plots.feature_barplot import barplot_mean_se
 
 
@@ -62,40 +62,40 @@ def main() -> None:
     print(f"{args.task}-Saline IDs: {len(saline_ids)}")
     print(f"{args.task}-Ghrelin IDs: {len(ghrelin_ids)}")
 
-    angle_saline = summarize_angle_features_from_ids(
+    # Compute full summary statistics for each group
+    angle_saline = batch_angle_features(
+        None,  # dlc_table (unused, for API compatibility)
         saline_ids,
-        how=args.how,
-        individual=args.individual,
-        smoothing_window=args.smoothing_window,
         likelihood_threshold=args.likelihood_threshold,
+        smooth_window=args.smoothing_window,
     )
 
-    angle_ghrelin = summarize_angle_features_from_ids(
+    angle_ghrelin = batch_angle_features(
+        None,  # dlc_table (unused, for API compatibility)
         ghrelin_ids,
-        how=args.how,
-        individual=args.individual,
-        smoothing_window=args.smoothing_window,
         likelihood_threshold=args.likelihood_threshold,
+        smooth_window=args.smoothing_window,
     )
 
-    summary_df = pd.DataFrame(
-        {
-            "group": (
-                ["Saline"] * len(angle_saline)
-                + ["Ghrelin"] * len(angle_ghrelin)
-            ),
-            "head_body_misalignment": angle_saline + angle_ghrelin,
-        }
-    )
+    # Combine results and add group label
+    angle_saline['group'] = 'Saline'
+    angle_ghrelin['group'] = 'Ghrelin'
+    summary_df = pd.concat([angle_saline, angle_ghrelin], ignore_index=True)
 
+    # Save summary to CSV
     csv_path = RESULTS_DIR / f"{args.task.lower()}_angle_summary.csv"
     summary_df.to_csv(csv_path, index=False)
+    print(f"[✓] Saved {csv_path}")
+
+    # Plot head-body misalignment by group
+    saline_vals = angle_saline['head_body_misalignment_mean'].dropna()
+    ghrelin_vals = angle_ghrelin['head_body_misalignment_mean'].dropna()
 
     ax = barplot_mean_se(
-        angle_saline,
-        angle_ghrelin,
+        saline_vals,
+        ghrelin_vals,
         labels=["Saline", "Ghrelin"],
-        ylabel=f"{args.how.capitalize()} head-body misalignment (rad)",
+        ylabel="Mean head-body misalignment (rad)",
     )
 
     ax.set_title(f"{args.task}: head-body misalignment")
