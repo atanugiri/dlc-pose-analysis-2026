@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import argparse
-
 import numpy as np
 import pandas as pd
 
@@ -18,14 +16,38 @@ def compute_velocity_from_df(
     individual: str | None = None,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    corners: dict | None = None,
 ) -> pd.DataFrame:
-    """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart."""
+    """Compute per-frame x, y, vx, vy, and speed for one DLC bodypart.
+
+    If `corners` is provided the x/y coordinates will be normalized into the
+    unit square using `scripts.features.normalize_maze.normalize_coords`
+    before velocities are computed.
+    """
     if fps <= 0:
         raise ValueError("fps must be > 0")
 
     x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
-        df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold
+        df,
+        bodypart=bodypart,
+        fps=fps,
+        individual=individual,
+        smoothing_window=smoothing_window,
+        likelihood_threshold=likelihood_threshold,
     )
+
+    # apply normalization when corners provided
+    if corners is not None:
+        try:
+            from scripts.features.normalize_maze import normalize_coords
+
+            coords = np.column_stack([x, y])
+            coords_norm = normalize_coords(coords, corners, clip=True)
+            x = coords_norm[:, 0]
+            y = coords_norm[:, 1]
+        except Exception:
+            # if normalization fails, fall back to raw coords
+            pass
 
     x = pd.Series(x, index=index, dtype=float)
     y = pd.Series(y, index=index, dtype=float)
@@ -50,13 +72,56 @@ def compute_velocity_from_id(
     individual: str | None = None,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    normalization: bool = True,
 ) -> pd.DataFrame:
     """Load one DB record and compute per-frame velocity."""
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
 
-    return compute_velocity_from_df(df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold)
+    corners = None
+    if normalization:
+        # determine whether to pool across maze_number for this record
+        pool = False
+        try:
+            conn = db_utils.connect()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT maze_number FROM public.experimental_metadata WHERE id = %s",
+                        (record_id,),
+                    )
+                    row = cur.fetchone()
+                    pool = bool(row and row[0] is not None)
+            finally:
+                conn.close()
+        except Exception:
+            pool = False
+
+        try:
+            if pool:
+                from scripts.features.normalize_maze import estimate_maze_corners_from_group as _est
+            else:
+                from scripts.features.normalize_maze import estimate_maze_corners_from_id as _est
+
+            corners = _est(
+                record_id,
+                individual=individual,
+                likelihood_threshold=likelihood_threshold,
+                smoothing_window=smoothing_window,
+            )
+        except Exception:
+            corners = None
+
+    return compute_velocity_from_df(
+        df,
+        bodypart=bodypart,
+        fps=fps,
+        individual=individual,
+        smoothing_window=smoothing_window,
+        likelihood_threshold=likelihood_threshold,
+        corners=corners,
+    )
 
 
 def summarize_speed(
@@ -81,10 +146,16 @@ def summarize_speed_from_id(
     individual: str | None = None,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    normalization: bool = True,
 ) -> float:
     """Compute one scalar speed summary for one DB record id."""
     velocity_df = compute_velocity_from_id(
-        record_id, bodypart=bodypart, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold
+        record_id,
+        bodypart=bodypart,
+        individual=individual,
+        smoothing_window=smoothing_window,
+        likelihood_threshold=likelihood_threshold,
+        normalization=normalization,
     )
 
     return summarize_speed(
@@ -102,6 +173,7 @@ def summarize_speed_from_ids(
     individual: str | None = None,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.5,
+    normalization: bool = True,
 ) -> list[float]:
     """Compute one scalar speed summary per record id."""
     return [
@@ -113,51 +185,14 @@ def summarize_speed_from_ids(
             individual=individual,
             smoothing_window=smoothing_window,
             likelihood_threshold=likelihood_threshold,
+            normalization=normalization,
         )
         for record_id in record_ids
     ]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Compute summarized speed values for one or more record IDs."
-    )
-    parser.add_argument(
-        "record_ids",
-        nargs="+",
-        type=int,
-        help="One or more database record IDs.",
-    )
-    parser.add_argument(
-        "--bodypart",
-        default="Midback",
-        help="Bodypart name to use for velocity/speed computation.",
-    )
-    parser.add_argument(
-        "--how",
-        default="mean",
-        choices=["mean", "median", "max", "std"],
-        help="Summary method.",
-    )
-    parser.add_argument(
-        "--likelihood-min",
-        type=float,
-        default=None,
-        help="Optional minimum likelihood threshold.",
-    )
-
-    args = parser.parse_args()
-
-    values = summarize_speed_from_ids(
-        args.record_ids,
-        bodypart=args.bodypart,
-        how=args.how,
-        likelihood_min=args.likelihood_min,
-    )
-
-    for record_id, value in zip(args.record_ids, values):
-        print(f"{record_id}\t{value}")
-
 
 if __name__ == "__main__":
-    main()
+    record_ids = [1, 2]
+    values = summarize_speed_from_ids(record_ids, bodypart="Midback", how="mean", likelihood_threshold=0.5, normalization=True)
+    print(values)
