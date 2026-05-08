@@ -3,36 +3,42 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-import scripts.db.db_utils as db_utils
-import scripts.utils.dlc_utils as dlc_utils
 import scripts.features.feature_summary as feature_summary
+from scripts.features.normalize_pose import (
+    normalize_bodypart_from_id,
+    get_bodypart_from_id,
+)
 
 
-def compute_curvature_from_df(
-    df: pd.DataFrame,
+def compute_curvature_from_id(
+    record_id: int,
     *,
     bodypart: str = "Midback",
-    fps: float = db_utils.DEFAULT_FPS,
     individual: str | None = None,
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
-    likelihood_threshold: float | None = 0.5,
+    likelihood_threshold: float | None = 0.9,
+    normalization: bool = True,
 ) -> pd.DataFrame:
-    """Compute per-frame curvature for one DLC bodypart.
-    
-    Curvature is computed as κ = |x'y'' - y'x''| / (x'^2 + y'^2)^(3/2),
-    where primes denote derivatives with respect to time.
-    
-    If `speed_thresh` is provided, curvature is set to 0 for frames where
-    speed is below this threshold, as low-speed curvature can be unreliable.
-    """
-    if fps <= 0:
-        raise ValueError("fps must be > 0")
-
-    x, y, likelihood, time, index = dlc_utils.get_bodypart_xy_time(
-        df, bodypart=bodypart, fps=fps, individual=individual, smoothing_window=smoothing_window, likelihood_threshold=likelihood_threshold
+    """Load one DB record and compute per-frame curvature."""
+    if normalization:
+        x, y, likelihood, time, index = normalize_bodypart_from_id(
+            record_id,
+            bodypart=bodypart,
+            individual=individual,
+            likelihood_threshold=likelihood_threshold,
+            smoothing_window=smoothing_window,
+        )
+    else:
+        x, y, likelihood, time, index = get_bodypart_from_id(
+            record_id,
+            bodypart=bodypart,
+            individual=individual,
+            likelihood_threshold=likelihood_threshold,
+            smoothing_window=smoothing_window,
     )
 
+    # Convert arrays to Series with proper index
     x = pd.Series(x, index=index, dtype=float)
     y = pd.Series(y, index=index, dtype=float)
     likelihood = pd.Series(likelihood, index=index, dtype=float)
@@ -61,8 +67,9 @@ def compute_curvature_from_df(
     
     # Apply speed threshold if provided
     if speed_thresh is not None and speed_thresh > 0:
-        curvature = np.where(speed < speed_thresh, np.nan, curvature) # Probably should be np.nan, or try 0.0 instead of np.nan
-    out = pd.DataFrame({
+        curvature = np.where(speed < speed_thresh, np.nan, curvature)
+    
+    return pd.DataFrame({
         "time": t,
         "x": x,
         "y": y,
@@ -74,33 +81,6 @@ def compute_curvature_from_df(
         "curvature": curvature,
         "likelihood": likelihood,
     })
-
-    return out
-
-
-def compute_curvature_from_id(
-    record_id: int,
-    *,
-    bodypart: str = "Midback",
-    individual: str | None = None,
-    smoothing_window: int = 5,
-    speed_thresh: float = 0.01,
-    likelihood_threshold: float | None = 0.5,
-) -> pd.DataFrame:
-    """Load one DB record and compute per-frame curvature."""
-    filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
-    df = db_utils.load_dlc_dataframe(filtered_pose_file)
-    fps = db_utils.get_fps(record_id)
-
-    return compute_curvature_from_df(
-        df,
-        bodypart=bodypart,
-        fps=fps,
-        individual=individual,
-        smoothing_window=smoothing_window,
-        speed_thresh=speed_thresh,
-        likelihood_threshold=likelihood_threshold,
-    )
 
 
 def summarize_curvature(
@@ -128,7 +108,7 @@ def summarize_curvature_from_id(
     individual: str | None = None,
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
-    likelihood_threshold: float | None = 0.5,
+    likelihood_threshold: float | None = 0.9,
 ) -> float:
     """Compute one scalar curvature summary for one DB record id."""
     curvature_df = compute_curvature_from_id(
@@ -154,7 +134,7 @@ def summarize_curvature_from_ids(
     individual: str | None = None,
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
-    likelihood_threshold: float | None = 0.5,
+    likelihood_threshold: float | None = 0.9,
 ) -> list[float]:
     """Compute one scalar curvature summary per record id."""
     return [
