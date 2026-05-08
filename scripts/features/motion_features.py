@@ -39,7 +39,7 @@ def compute_velocity_from_df(
     # apply normalization when corners provided
     if corners is not None:
         try:
-            from scripts.features.normalize_maze import normalize_coords
+            from scripts.features.normalize_pose import normalize_coords
 
             coords = np.column_stack([x, y])
             coords_norm = normalize_coords(coords, corners, clip=True)
@@ -100,9 +100,9 @@ def compute_velocity_from_id(
 
         try:
             if pool:
-                from scripts.features.normalize_maze import estimate_maze_corners_from_group as _est
+                from scripts.features.normalize_pose import estimate_maze_corners_from_group as _est
             else:
-                from scripts.features.normalize_maze import estimate_maze_corners_from_id as _est
+                from scripts.features.normalize_pose import estimate_maze_corners_from_id as _est
 
             corners = _est(
                 record_id,
