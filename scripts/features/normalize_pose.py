@@ -48,29 +48,24 @@ def normalize_coords(
     return out
 
 
-def normalize_bodypart_from_id(
+def get_bodypart_from_id(
     record_id: int,
     *,
     bodypart: str = "Midback",
     individual: str | None = None,
-    likelihood_threshold: float | None = None,
+    likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
-    quantiles: tuple[float, float] = (0.5, 99.5),
-    normalization: bool = True,
-    pool_across_maze: bool | None = None,
 ) -> tuple:
-    """Return (x, y, likelihood, time, index) for one bodypart.
+    """Return raw (x, y, likelihood, time, index) for one bodypart from DB record.
 
-    When ``normalization=True`` the coordinates are mapped into the unit square
-    using maze corners estimated from this record (or pooled across trials with
-    the same ``task`` and ``maze_number`` when a maze_number is available).
-    When ``normalization=False`` the raw DLC coordinates are returned unchanged.
+    Loads the filtered pose file for the record and extracts coordinates
+    without normalization.
     """
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     fps = db_utils.get_fps(record_id)
 
-    x, y, likelihood, time, index = get_bodypart_xy_time(
+    return get_bodypart_xy_time(
         df,
         bodypart=bodypart,
         fps=float(fps),
@@ -79,8 +74,30 @@ def normalize_bodypart_from_id(
         likelihood_threshold=likelihood_threshold,
     )
 
-    if not normalization:
-        return x, y, likelihood, time, index
+
+def normalize_bodypart_from_id(
+    record_id: int,
+    *,
+    bodypart: str = "Midback",
+    individual: str | None = None,
+    likelihood_threshold: float | None = 0.9,
+    smoothing_window: int | None = None,
+    quantiles: tuple[float, float] = (0.5, 99.5),
+    pool_across_maze: bool | None = None,
+) -> tuple:
+    """Return normalized (x, y, likelihood, time, index) for one bodypart.
+
+    Coordinates are mapped into the unit square using maze corners estimated
+    from this record (or pooled across trials with the same ``task`` and
+    ``maze_number`` when a maze_number is available).
+    """
+    x, y, likelihood, time, index = get_bodypart_from_id(
+        record_id,
+        bodypart=bodypart,
+        individual=individual,
+        likelihood_threshold=likelihood_threshold,
+        smoothing_window=smoothing_window,
+    )
 
     # determine pooling: auto-detect when pool_across_maze is not set
     if pool_across_maze is None:

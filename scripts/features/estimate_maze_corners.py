@@ -11,7 +11,7 @@ def estimate_maze_corners_from_id(
     *,
     quantiles: tuple[float, float] = (0.5, 99.5),
     individual: str | None = None,
-    likelihood_threshold: float | None = None,
+    likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
 ) -> dict:
     """Estimate maze extents (robust corners) from Midback positions for one record.
@@ -50,7 +50,7 @@ def estimate_maze_corners_from_ids(
     *,
     quantiles: tuple[float, float] = (0.5, 99.5),
     individual: str | None = None,
-    likelihood_threshold: float | None = None,
+    likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
 ) -> dict:
     """Estimate maze corners pooled across all trials sharing the same maze_number and task.
