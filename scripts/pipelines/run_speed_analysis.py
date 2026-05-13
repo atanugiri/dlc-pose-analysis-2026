@@ -36,6 +36,12 @@ def main() -> None:
         default=0.5,
         help="Likelihood threshold for filtering low-confidence poses.",
     )
+    parser.add_argument(
+        "--normalization",
+        type=bool,
+        default=True,
+        help="Whether to normalize coordinates to unit square using maze corners.",
+    )
 
     args = parser.parse_args()
 
@@ -70,6 +76,7 @@ def main() -> None:
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         likelihood_threshold=args.likelihood_threshold,
+        normalization=args.normalization,
     )
 
     speed_ghrelin = summarize_speed_from_ids(
@@ -79,6 +86,7 @@ def main() -> None:
         individual=args.individual,
         smoothing_window=args.smoothing_window,
         likelihood_threshold=args.likelihood_threshold,
+        normalization=args.normalization,
     )
 
     summary_df = pd.DataFrame(
