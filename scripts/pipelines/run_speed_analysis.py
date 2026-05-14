@@ -38,9 +38,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--normalization",
-        type=bool,
+        type=lambda x: x.lower() in ('true', '1', 'yes'),
         default=True,
-        help="Whether to normalize coordinates to unit square using maze corners.",
+        help="Whether to normalize coordinates (true/false).",
     )
 
     args = parser.parse_args()
