@@ -82,7 +82,6 @@ def summarize_speed_from_id(
     *,
     bodypart: str = "Midback",
     how: str = "mean",
-    likelihood_min: float | None = None,
     individual: str | None = None,
     smoothing_window: int | None = None,
     likelihood_threshold: float | None = 0.9,

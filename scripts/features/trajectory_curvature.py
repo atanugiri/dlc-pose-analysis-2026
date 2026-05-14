@@ -109,6 +109,7 @@ def summarize_curvature_from_id(
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
     likelihood_threshold: float | None = 0.9,
+    normalization: bool = True,
 ) -> float:
     """Compute one scalar curvature summary for one DB record id."""
     curvature_df = compute_curvature_from_id(
@@ -118,6 +119,7 @@ def summarize_curvature_from_id(
         smoothing_window=smoothing_window,
         speed_thresh=speed_thresh,
         likelihood_threshold=likelihood_threshold,
+        normalization=normalization,
     )
 
     return summarize_curvature(
@@ -135,6 +137,7 @@ def summarize_curvature_from_ids(
     smoothing_window: int = 5,
     speed_thresh: float = 0.01,
     likelihood_threshold: float | None = 0.9,
+    normalization: bool = True,
 ) -> list[float]:
     """Compute one scalar curvature summary per record id."""
     return [
@@ -146,6 +149,7 @@ def summarize_curvature_from_ids(
             smoothing_window=smoothing_window,
             speed_thresh=speed_thresh,
             likelihood_threshold=likelihood_threshold,
+            normalization=normalization,
         )
         for record_id in record_ids
     ]
