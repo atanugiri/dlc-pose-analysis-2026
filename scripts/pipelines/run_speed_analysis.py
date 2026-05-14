@@ -16,7 +16,7 @@ def main() -> None:
         description="Run speed analysis for ChickenBroth saline vs ghrelin."
     )
 
-    parser.add_argument("--task", default="ChickenBroth")
+    parser.add_argument("--task", nargs='+', default=["ChickenBroth"], help="Task name(s) to analyze (e.g., --task ToyRAT ToyStick)")
     parser.add_argument("--bodypart", default="Head")
     parser.add_argument(
         "--individual",
@@ -49,11 +49,17 @@ def main() -> None:
     speed_analysis_dir = RESULTS_DIR / "speed_analysis"
     speed_analysis_dir.mkdir(exist_ok=True)
 
-    saline_ids = db_utils.get_treatment_ids(args.task, 'Y')
-    ghrelin_ids = db_utils.get_treatment_ids(args.task, 'P')
+    # Combine IDs from all specified tasks
+    saline_ids = []
+    ghrelin_ids = []
+    for task in args.task:
+        saline_ids.extend(db_utils.get_treatment_ids(task, 'Y'))
+        ghrelin_ids.extend(db_utils.get_treatment_ids(task, 'P'))
 
-    print(f"{args.task}-Saline IDs: {len(saline_ids)}")
-    print(f"{args.task}-Ghrelin IDs: {len(ghrelin_ids)}")
+    task_name = "_".join(args.task)
+    print(f"Tasks: {task_name}")
+    print(f"Saline IDs: {len(saline_ids)}")
+    print(f"Ghrelin IDs: {len(ghrelin_ids)}")
 
     speed_saline = summarize_speed_from_ids(
         saline_ids,
@@ -85,7 +91,7 @@ def main() -> None:
         }
     )
 
-    csv_path = speed_analysis_dir / f"{args.task.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_summary.csv"
+    csv_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_summary.csv"
     summary_df.to_csv(csv_path, index=False)
 
     ax = barplot_mean_se(
@@ -95,10 +101,10 @@ def main() -> None:
         ylabel=f"{args.how.capitalize()} speed",
     )
 
-    ax.set_title(f"{args.task}: {args.bodypart} speed")
+    ax.set_title(f"{task_name}: {args.bodypart} speed")
     plt.tight_layout()
 
-    fig_path = speed_analysis_dir / f"{args.task.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_barplot.png"
+    fig_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_barplot.png"
     plt.savefig(fig_path, dpi=300)
 
     print(f"Saved CSV: {csv_path}")

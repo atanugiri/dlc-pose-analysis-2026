@@ -19,15 +19,15 @@ mkdir -p "$WORK/mplconfig"
 mkdir -p "$WORK/tmp"
 
 # Set up environment variables
-export CONDA_ENV="$HOME/miniconda3/envs/ghrelin"
+export CONDA_ENV="$HOME/miniconda3/envs/DEEPLABCUT"
 export PIP_CACHE_DIR="$WORK/pip-cache"
 export XDG_CACHE_HOME="$WORK/.cache"
 export MPLCONFIGDIR="$WORK/mplconfig"
 export TMPDIR="$WORK/tmp"
 export TMP="$WORK/tmp"
 export TEMP="$WORK/tmp"
-export OMP_NUM_THREADS="$SLURM_CPUS_PER_TASK"
-export MKL_NUM_THREADS="$SLURM_CPUS_PER_TASK"
+# export OMP_NUM_THREADS="$SLURM_CPUS_PER_TASK"
+# export MKL_NUM_THREADS="$SLURM_CPUS_PER_TASK"
 
 # Activate conda environment
 echo "Job started on $(hostname) at $(date)"
@@ -37,13 +37,8 @@ conda activate "$CONDA_ENV"
 # Navigate to project directory
 cd "$WORK/dlc-pose-analysis-2026" || exit 1
 
-export PGDATA="$WORK/pgdata"
-mkdir -p "$PGDATA"
-mkdir -p "$WORK/pglogs"
-pg_ctl -D "$PGDATA" -l "$WORK/pglogs/postgres.log" start
-
-# ensure Python connects to local server
-export DB_HOST=localhost
+# Database configuration (ensure server is running before job submission)
+export DB_HOST=129.108.156.40
 export DB_PORT=5432
 export DB_USER=agiri
 export DB_NAME=dlc_pose_analysis_2026
@@ -51,7 +46,6 @@ export DB_NAME=dlc_pose_analysis_2026
 # Define tasks to iterate over
 TASKS=('LightOnly' 'ChickenBroth' 'ToyLight' 'FoodOnly' 'FoodLight' 'ChocolateMilk' 'ToyOnly' 'ToyStick')
 
-# Parse command line arguments (default values)
 echo "Running speed analysis for all tasks:"
 echo "  Tasks: ${TASKS[@]}"
 echo ""
@@ -64,7 +58,5 @@ for TASK in "${TASKS[@]}"; do
     echo "  ✓ Completed $TASK"
     echo ""
 done
-
-pg_ctl -D "$PGDATA" stop
 
 echo "All tasks completed"
