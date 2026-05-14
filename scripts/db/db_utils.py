@@ -31,6 +31,25 @@ def fetch_ids_with_params(query: str, params: tuple) -> list[int]:
             return [row[0] for row in cur.fetchall()]
     finally:
         conn.close()
+
+def get_treatment_ids(task: str, treatment: str) -> list[int]:
+    """Fetch record IDs for a given task and treatment.
+    
+    Args:
+        task: Task name (e.g., 'ChickenBroth')
+        treatment: Treatment code ('Y' for saline, 'P' for ghrelin)
+    
+    Returns:
+        List of record IDs ordered by ID
+    """
+    query = """
+        SELECT id
+        FROM public.experimental_metadata
+        WHERE task = %s
+          AND treatment = %s
+        ORDER BY id;
+    """
+    return fetch_ids_with_params(query, (task, treatment))
         
 def get_filtered_pose_file(record_id: int) -> str:
     """Return experimental_metadata.filtered_pose_file for a given id."""

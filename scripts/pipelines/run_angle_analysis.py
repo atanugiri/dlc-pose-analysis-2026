@@ -40,24 +40,8 @@ def main() -> None:
 
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    query_saline = """
-        SELECT id
-        FROM public.experimental_metadata
-        WHERE task = %s
-          AND treatment = 'Y'
-        ORDER BY id;
-    """
-
-    query_ghrelin = """
-        SELECT id
-        FROM public.experimental_metadata
-        WHERE task = %s
-          AND treatment = 'P'
-        ORDER BY id;
-    """
-
-    saline_ids = db_utils.fetch_ids_with_params(query_saline, (args.task,))
-    ghrelin_ids = db_utils.fetch_ids_with_params(query_ghrelin, (args.task,))
+    saline_ids = db_utils.get_treatment_ids(args.task, 'Y')
+    ghrelin_ids = db_utils.get_treatment_ids(args.task, 'P')
 
     print(f"{args.task}-Saline IDs: {len(saline_ids)}")
     print(f"{args.task}-Ghrelin IDs: {len(ghrelin_ids)}")
