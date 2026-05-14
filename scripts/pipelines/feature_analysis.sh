@@ -37,6 +37,17 @@ conda activate "$CONDA_ENV"
 # Navigate to project directory
 cd "$WORK/dlc-pose-analysis-2026" || exit 1
 
+export PGDATA="$WORK/pgdata"
+mkdir -p "$PGDATA"
+mkdir -p "$WORK/pglogs"
+pg_ctl -D "$PGDATA" -l "$WORK/pglogs/postgres.log" start
+
+# ensure Python connects to local server
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_USER=agiri
+export DB_NAME=dlc_pose_analysis_2026
+
 # Define tasks to iterate over
 TASKS=('LightOnly' 'ChickenBroth' 'ToyLight' 'FoodOnly' 'FoodLight' 'ChocolateMilk' 'ToyOnly' 'ToyStick')
 
@@ -53,5 +64,7 @@ for TASK in "${TASKS[@]}"; do
     echo "  ✓ Completed $TASK"
     echo ""
 done
+
+pg_ctl -D "$PGDATA" stop
 
 echo "All tasks completed"
