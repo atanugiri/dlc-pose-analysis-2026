@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -13,82 +12,77 @@ from scripts.plots.feature_barplot import barplot_mean_se
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run angle analysis for ChickenBroth saline vs ghrelin."
+        description="Run angle analysis for specified task(s), saline vs ghrelin."
     )
 
-    parser.add_argument("--task", default="ChickenBroth")
+    parser.add_argument("--task", nargs='+', default=["ChickenBroth"], help="Task name(s) to analyze (e.g., --task ToyRAT ToyStick)")
     parser.add_argument(
         "--individual",
         default=None,
         help="Optional individual name for multi-animal files (e.g. 'm1').",
     )
-    parser.add_argument("--how", default="mean", choices=["mean", "median", "max", "std"])
-    parser.add_argument(
-        "--smoothing-window",
-        type=int,
-        default=None,
-        help="Optional smoothing window size for head-body misalignment.",
-    )
     parser.add_argument(
         "--likelihood-threshold",
         type=float,
-        default=0.5,
+        default=None,
         help="Likelihood threshold for filtering low-confidence poses.",
     )
 
     args = parser.parse_args()
 
     RESULTS_DIR.mkdir(exist_ok=True)
+    angle_analysis_dir = RESULTS_DIR / "angle_analysis"
+    angle_analysis_dir.mkdir(exist_ok=True)
 
-    saline_ids = db_utils.get_treatment_ids(args.task, 'Y')
-    ghrelin_ids = db_utils.get_treatment_ids(args.task, 'P')
+    # Combine IDs from all specified tasks
+    saline_ids = []
+    ghrelin_ids = []
+    for task in args.task:
+        saline_ids.extend(db_utils.get_treatment_ids(task, 'Y'))
+        ghrelin_ids.extend(db_utils.get_treatment_ids(task, 'P'))
 
-    print(f"{args.task}-Saline IDs: {len(saline_ids)}")
-    print(f"{args.task}-Ghrelin IDs: {len(ghrelin_ids)}")
+    task_name = "_".join(args.task)
+    print(f"Tasks: {task_name}")
+    print(f"Saline IDs: {len(saline_ids)}")
+    print(f"Ghrelin IDs: {len(ghrelin_ids)}")
 
-    # Compute head-body misalignment p95 for each group
-    saline_p95 = head_body_misalignment_p95_from_ids(
+    angle_saline = head_body_misalignment_p95_from_ids(
         saline_ids,
         likelihood_threshold=args.likelihood_threshold,
         individual=args.individual,
     )
 
-    ghrelin_p95 = head_body_misalignment_p95_from_ids(
+    angle_ghrelin = head_body_misalignment_p95_from_ids(
         ghrelin_ids,
         likelihood_threshold=args.likelihood_threshold,
         individual=args.individual,
     )
 
-    angle_saline = pd.DataFrame({"trial_id": saline_ids, "head_body_misalignment_p95": saline_p95})
-    angle_ghrelin = pd.DataFrame({"trial_id": ghrelin_ids, "head_body_misalignment_p95": ghrelin_p95})
+    summary_df = pd.DataFrame(
+        {
+            "group": (
+                ["Saline"] * len(angle_saline)
+                + ["Ghrelin"] * len(angle_ghrelin)
+            ),
+            "head_body_misalignment_p95": angle_saline + angle_ghrelin,
+        }
+    )
 
-    # Combine results and add group label
-    angle_saline["group"] = "Saline"
-    angle_ghrelin["group"] = "Ghrelin"
-    summary_df = pd.concat([angle_saline, angle_ghrelin], ignore_index=True)
-
-    # Save summary to CSV
-    csv_path = RESULTS_DIR / f"{args.task.lower()}_angle_summary.csv"
+    csv_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_summary.csv"
     summary_df.to_csv(csv_path, index=False)
-    print(f"[✓] Saved {csv_path}")
-
-    # Plot head-body misalignment p95 by group
-    saline_vals = angle_saline['head_body_misalignment_p95'].dropna()
-    ghrelin_vals = angle_ghrelin['head_body_misalignment_p95'].dropna()
 
     ax = barplot_mean_se(
-        saline_vals,
-        ghrelin_vals,
+        angle_saline,
+        angle_ghrelin,
         labels=["Saline", "Ghrelin"],
         ylabel="Head-body misalignment p95 (rad)",
     )
 
-    ax.set_title(f"{args.task}: head-body misalignment")
+    ax.set_title(f"{task_name}: head-body misalignment")
     plt.tight_layout()
 
-    fig_path = RESULTS_DIR / f"{args.task.lower()}_angle_barplot.png"
+    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_barplot.png"
     plt.savefig(fig_path, dpi=300)
-    plt.show()
 
     print(f"Saved CSV: {csv_path}")
     print(f"Saved figure: {fig_path}")

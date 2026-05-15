@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, ylabel="Mean ± SE"):
+def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True):
 	"""Plot mean bars with standard error for variable list inputs."""
 	if len(value_lists) == 0:
 		raise ValueError("Provide at least one list of values.")
@@ -54,5 +54,9 @@ def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, 
 			bbox=dict(facecolor="white", edgecolor="none", alpha=0.75),
 		)
 
-	return ax
+	if show_points:
+		for i, a in enumerate(arrays):
+			x_i = np.random.normal(i, 0.05, size=len(a))
+			ax.scatter(x_i, a, color=colors[i], alpha=0.6, edgecolor='k')
 
+	return ax
