@@ -33,6 +33,12 @@ def main() -> None:
         default='p95',
         help="Which metric to analyze and plot.",
     )
+    parser.add_argument(
+        "--test",
+        choices=['welch', 'welch_greater', 'welch_less', 'mann_whitney'],
+        default='welch',
+        help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
+    )
 
     args = parser.parse_args()
 
@@ -88,6 +94,7 @@ def main() -> None:
         angle_ghrelin,
         labels=["Saline", "Ghrelin"],
         ylabel=f"Head-body misalignment {metric} (rad)",
+        test=args.test,
     )
 
     ax.set_title(f"{task_name}: head-body misalignment {metric}")

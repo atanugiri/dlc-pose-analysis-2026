@@ -32,6 +32,12 @@ def main() -> None:
         default="speed",
         help="Feature column name (default: 'speed', options: 'speed', 'curvature', 'head_body_misalignment_p95')",
     )
+    parser.add_argument(
+        "--test",
+        choices=['welch', 'welch_greater', 'welch_less', 'mann_whitney'],
+        default='welch',
+        help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
+    )
 
     args = parser.parse_args()
 
@@ -66,6 +72,7 @@ def main() -> None:
         ghrelin_values,
         labels=["Saline", "Ghrelin"],
         ylabel=f"Mean ± SE {feature}",
+        test=args.test,
     )
 
     ax.set_title(f"Combined tasks: {feature}")
@@ -78,7 +85,7 @@ def main() -> None:
     feature_dir_map = {
         "speed": "speed_analysis",
         "curvature": "curvature_analysis",
-        "head_body_misalignment_p95": "angle_analysis",
+        "median": "angle_analysis",
     }
     analysis_subdir = feature_dir_map.get(feature, "analysis")
     analysis_dir = RESULTS_DIR / analysis_subdir

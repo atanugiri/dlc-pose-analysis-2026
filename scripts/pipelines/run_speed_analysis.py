@@ -42,6 +42,12 @@ def main() -> None:
         default=True,
         help="Whether to normalize coordinates (true/false).",
     )
+    parser.add_argument(
+        "--test",
+        choices=['welch', 'welch_greater', 'welch_less', 'mann_whitney'],
+        default='welch',
+        help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
+    )
 
     args = parser.parse_args()
 
@@ -99,6 +105,7 @@ def main() -> None:
         speed_ghrelin,
         labels=["Saline", "Ghrelin"],
         ylabel=f"{args.how.capitalize()} speed",
+        test=args.test,
     )
 
     ax.set_title(f"{task_name}: {args.bodypart} speed")

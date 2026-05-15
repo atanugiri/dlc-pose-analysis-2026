@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True):
-	"""Plot mean bars with standard error for variable list inputs."""
+def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True, test='welch'):
+	"""Plot mean bars with standard error for variable list inputs.
+	
+	Args:
+		test: 'welch' (two-tailed), 'welch_greater', 'welch_less', or 'mann_whitney'
+	"""
 	if len(value_lists) == 0:
 		raise ValueError("Provide at least one list of values.")
 
@@ -16,8 +20,18 @@ def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, 
 	ses = [a.std(ddof=1) / np.sqrt(len(a)) if len(a) > 1 else 0.0 for a in arrays]
 	stat_text = None
 	if len(arrays) == 2:
-		stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False)
-		stat_text = f"Welch t-test: t={stat:.3g}, p={p_value:.3g}"
+		if test == 'mann_whitney':
+			stat, p_value = stats.mannwhitneyu(arrays[0], arrays[1], alternative='two-sided')
+			stat_text = f"Mann-Whitney U: U={stat:.3g}, p={p_value:.3g}"
+		elif test == 'welch_greater':
+			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False, alternative='greater')
+			stat_text = f"Welch t-test (>): t={stat:.3g}, p={p_value:.3g}"
+		elif test == 'welch_less':
+			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False, alternative='less')
+			stat_text = f"Welch t-test (<): t={stat:.3g}, p={p_value:.3g}"
+		else:  # 'welch' or default
+			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False)
+			stat_text = f"Welch t-test: t={stat:.3g}, p={p_value:.3g}"
 	elif len(arrays) > 2:
 		stat, p_value = stats.f_oneway(*arrays)
 		df_between = len(arrays) - 1
