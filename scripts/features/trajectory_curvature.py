@@ -139,8 +139,11 @@ def summarize_curvature_from_ids(
     likelihood_threshold: float | None = 0.9,
     normalization: bool = True,
 ) -> list[float]:
-    """Compute one scalar curvature summary per record id."""
-    return [
+    """Compute one scalar curvature summary per record id.
+    
+    Filters outliers: removes curvature values > 1000.
+    """
+    curvatures = [
         summarize_curvature_from_id(
             record_id,
             bodypart=bodypart,
@@ -153,3 +156,9 @@ def summarize_curvature_from_ids(
         )
         for record_id in record_ids
     ]
+    
+    # Filter outliers: remove values > 1000
+    max_curvature = 1000
+    curvatures = [c for c in curvatures if c <= max_curvature]
+    
+    return curvatures

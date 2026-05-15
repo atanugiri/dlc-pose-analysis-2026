@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import argparse
-from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -90,21 +88,31 @@ def head_body_misalignment_from_df(
     return pd.Series(abs_angles, index=df.index, name="head_body_misalignment")
 
 
-def head_body_misalignment_p95(
+def head_body_misalignment_metrics(
     df: pd.DataFrame,
     *,
     likelihood_threshold: float | None = 0.5,
     bodyparts: list[str] | None = None,
     individual: str | None = None,
-) -> float:
-    """Short helper returning the 95th percentile scalar from `head_body_misalignment_from_df`."""
+) -> dict:
+    """Compute multiple head-body misalignment statistics.
+    
+    Returns a dict with p95, mean, median, and max values.
+    """
     series = head_body_misalignment_from_df(
         df, likelihood_threshold=likelihood_threshold, bodyparts=bodyparts, individual=individual
     )
-    return float(np.nanpercentile(series.to_numpy(), 95))
+    arr = series.to_numpy()
+    
+    return {
+        'p95': float(np.nanpercentile(arr, 95)),
+        'mean': float(np.nanmean(arr)),
+        'median': float(np.nanmedian(arr)),
+        'max': float(np.nanmax(arr)),
+    }
 
 
-def head_body_misalignment_p95_from_id(
+def head_body_misalignment_metrics_from_id(
     record_id: int,
     *,
     likelihood_threshold: float | None = 0.65,
@@ -114,25 +122,23 @@ def head_body_misalignment_p95_from_id(
     filtered_pose_file = db_utils.get_filtered_pose_file(record_id)
     df = db_utils.load_dlc_dataframe(filtered_pose_file)
     # Use the new helper that returns the scalar p95
-    return head_body_misalignment_p95(
+    return head_body_misalignment_metrics(
         df, likelihood_threshold=likelihood_threshold, bodyparts=bodyparts, individual=individual
     )
 
-def head_body_misalignment_p95_from_ids(
+def head_body_misalignment_metrics_from_ids(
     record_ids: list[int],
     *,
     likelihood_threshold: float | None = 0.65,
     bodyparts: list[str] | None = None,
     individual: str | None = None,
-) -> list[float]:
-    """Compute head-body misalignment p95 for a list of record IDs.
+) -> list[dict]:
+    """Compute head-body misalignment metrics for a list of record IDs.
 
-    Returns a list of floats in the same order as `record_ids`. If an ID
-    fails to process the function will raise; callers can catch exceptions
-    and handle individually if desired.
+    Returns a list of dicts, each with keys: p95, mean, median, max.
     """
     return [
-        head_body_misalignment_p95_from_id(
+        head_body_misalignment_metrics_from_id(
             rid, likelihood_threshold=likelihood_threshold, bodyparts=bodyparts, individual=individual
         )
         for rid in record_ids
@@ -140,6 +146,6 @@ def head_body_misalignment_p95_from_ids(
 
 if __name__ == "__main__":
     record_ids = [1, 2]
-    misalignment_p95_list = head_body_misalignment_p95_from_ids(record_ids)
+    misalignment_p95_list = head_body_misalignment_metrics_from_ids(record_ids)
     for record_id, misalignment_p95 in zip(record_ids, misalignment_p95_list):
         print(f"Record ID {record_id} head-body misalignment p95: {misalignment_p95:.2f} radians")
