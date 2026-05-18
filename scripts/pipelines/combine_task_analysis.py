@@ -12,13 +12,13 @@ from scripts.plots.feature_barplot import barplot_mean_se
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Combine multiple analysis CSVs and generate combined plot."
+        description="Combine multiple analysis Excel files and generate combined plot."
     )
     parser.add_argument(
-        "csv_files",
+        "excel_files",
         nargs='+',
         type=Path,
-        help="CSV files to combine (e.g., toyrat_head_*.csv toystick_head_*.csv)",
+        help="Excel files to combine (e.g., toyrat_head_*.xlsx toystick_head_*.xlsx)",
     )
     parser.add_argument(
         "--output-name",
@@ -42,16 +42,16 @@ def main() -> None:
     args = parser.parse_args()
 
     # Validate files exist
-    for f in args.csv_files:
+    for f in args.excel_files:
         if not f.exists():
-            raise FileNotFoundError(f"CSV file not found: {f}")
+            raise FileNotFoundError(f"Excel file not found: {f}")
 
-    # Read and concatenate all CSVs
-    dfs = [pd.read_csv(f) for f in args.csv_files]
+    # Read and concatenate all Excel files
+    dfs = [pd.read_excel(f) for f in args.excel_files]
     combined_df = pd.concat(dfs, ignore_index=True)
 
-    print(f"Combined {len(args.csv_files)} files:")
-    for f in args.csv_files:
+    print(f"Combined {len(args.excel_files)} files:")
+    for f in args.excel_files:
         print(f"  - {f.name}")
     print(f"Total rows: {len(combined_df)}")
 
@@ -91,14 +91,15 @@ def main() -> None:
     analysis_dir = RESULTS_DIR / analysis_subdir
     analysis_dir.mkdir(exist_ok=True)
 
-    csv_path = analysis_dir / f"{args.output_name}_{feature}_summary.csv"
-    combined_df.to_csv(csv_path, index=False)
+    excel_path = analysis_dir / f"{args.output_name}_{feature}_summary.xlsx"
+    combined_df.to_excel(excel_path, index=False)
 
-    fig_path = analysis_dir / f"{args.output_name}_{feature}_barplot.png"
+    fig_path = analysis_dir / f"{args.output_name}_{feature}_barplot.pdf"
     plt.savefig(fig_path, dpi=300)
 
-    print(f"Saved combined CSV: {csv_path}")
+    print(f"Saved combined Excel: {excel_path}")
     print(f"Saved combined plot: {fig_path}")
+
 
 
 if __name__ == "__main__":

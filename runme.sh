@@ -26,8 +26,8 @@ python -m scripts.pipelines.run_speed_analysis --task ToyStick
 
 echo "Combining ToyRAT + ToyStick speed..."
 python -m scripts.pipelines.combine_task_analysis \
-  results/speed_analysis/toyrat_head_*.csv \
-  results/speed_analysis/toystick_head_*.csv \
+  results/speed_analysis/toyrat_head_sw_None_lt_None_speed_summary.xlsx \
+  results/speed_analysis/toystick_head_sw_None_lt_None_speed_summary.xlsx \
   --output-name toyrat_toystick
 
 # Curvature analysis for all tasks

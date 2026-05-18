@@ -89,6 +89,7 @@ def main() -> None:
 
     summary_df = pd.DataFrame(
         {
+            "id": saline_ids + ghrelin_ids,
             "group": (
                 ["Saline"] * len(speed_saline)
                 + ["Ghrelin"] * len(speed_ghrelin)
@@ -97,8 +98,8 @@ def main() -> None:
         }
     )
 
-    csv_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_summary.csv"
-    summary_df.to_csv(csv_path, index=False)
+    excel_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_summary.xlsx"
+    summary_df.to_excel(excel_path, index=False)
 
     ax = barplot_mean_se(
         speed_saline,
@@ -111,10 +112,10 @@ def main() -> None:
     ax.set_title(f"{task_name}: {args.bodypart} speed")
     plt.tight_layout()
 
-    fig_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_barplot.png"
+    fig_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_barplot.pdf"
     plt.savefig(fig_path, dpi=300)
 
-    print(f"Saved CSV: {csv_path}")
+    print(f"Saved Excel: {excel_path}")
     print(f"Saved figure: {fig_path}")
 
 

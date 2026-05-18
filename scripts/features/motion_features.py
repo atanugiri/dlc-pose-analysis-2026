@@ -22,7 +22,8 @@ def compute_velocity_from_id(
     """Load one DB record and compute per-frame velocity.
 
     When normalization=True, coordinates are normalized to unit square using
-    pooled maze corners. When False, raw DLC coordinates are used.
+    pooled maze corners and converted to cm (1 unit = 64 cm). When False,
+    raw DLC coordinates are used.
     """
     if normalization:
         x, y, likelihood, time, index = normalize_bodypart_from_id(
@@ -46,6 +47,12 @@ def compute_velocity_from_id(
     y = pd.Series(y, index=index, dtype=float)
     likelihood = pd.Series(likelihood, index=index, dtype=float)
     t = pd.Series(time, index=index).astype(float)
+
+    # Convert normalized coordinates to cm (1 unit = 64 cm)
+    if normalization:
+        maze_size_cm = 64
+        x = x * maze_size_cm
+        y = y * maze_size_cm
 
     # Compute velocities
     dt = t.diff().replace(0, np.nan)
