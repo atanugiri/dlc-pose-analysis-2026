@@ -96,6 +96,7 @@ def main() -> None:
 
     summary_df = pd.DataFrame(
         {
+            "id": saline_ids + ghrelin_ids,
             "group": (
                 ["Saline"] * len(curvature_saline)
                 + ["Ghrelin"] * len(curvature_ghrelin)
@@ -104,8 +105,8 @@ def main() -> None:
         }
     )
 
-    csv_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_summary.csv"
-    summary_df.to_csv(csv_path, index=False)
+    excel_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_summary.xlsx"
+    summary_df.to_excel(excel_path, index=False)
 
     ax = barplot_mean_se(
         curvature_saline,
@@ -118,10 +119,10 @@ def main() -> None:
     ax.set_title(f"{task_name}: {args.bodypart} curvature")
     plt.tight_layout()
 
-    fig_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_barplot.png"
+    fig_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_barplot.pdf"
     plt.savefig(fig_path, dpi=300)
 
-    print(f"Saved CSV: {csv_path}")
+    print(f"Saved Excel: {excel_path}")
     print(f"Saved figure: {fig_path}")
 
 

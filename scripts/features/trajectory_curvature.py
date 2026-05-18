@@ -20,7 +20,13 @@ def compute_curvature_from_id(
     likelihood_threshold: float | None = 0.9,
     normalization: bool = True,
 ) -> pd.DataFrame:
-    """Load one DB record and compute per-frame curvature."""
+    """Load one DB record and compute per-frame curvature.
+
+    When `normalization=True`, coordinates returned by
+    `normalize_bodypart_from_id` are in arbitrary normalized units; here
+    we convert them to centimeters (1 unit = 64 cm) before computing
+    derivatives so that curvature is expressed in 1/cm.
+    """
     if normalization:
         x, y, likelihood, time, index = normalize_bodypart_from_id(
             record_id,
@@ -43,6 +49,12 @@ def compute_curvature_from_id(
     y = pd.Series(y, index=index, dtype=float)
     likelihood = pd.Series(likelihood, index=index, dtype=float)
     t = pd.Series(time, index=index).astype(float)
+
+    # If coordinates are normalized, convert to cm (1 unit = 64 cm)
+    if normalization:
+        maze_size_cm = 64
+        x = x * maze_size_cm
+        y = y * maze_size_cm
 
     dt = t.diff().replace(0, np.nan)
     
@@ -156,9 +168,5 @@ def summarize_curvature_from_ids(
         )
         for record_id in record_ids
     ]
-    
-    # Filter outliers: remove values > 1000
-    max_curvature = 1000
-    curvatures = [c for c in curvatures if c <= max_curvature]
     
     return curvatures

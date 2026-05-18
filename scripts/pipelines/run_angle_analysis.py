@@ -78,6 +78,7 @@ def main() -> None:
     
     summary_df = pd.DataFrame(
         {
+            "id": saline_ids + ghrelin_ids,
             "group": (
                 ["Saline"] * len(angle_saline)
                 + ["Ghrelin"] * len(angle_ghrelin)
@@ -86,8 +87,8 @@ def main() -> None:
         }
     )
 
-    csv_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_summary.csv"
-    summary_df.to_csv(csv_path, index=False)
+    excel_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_summary.xlsx"
+    summary_df.to_excel(excel_path, index=False)
 
     ax = barplot_mean_se(
         angle_saline,
@@ -100,11 +101,11 @@ def main() -> None:
     ax.set_title(f"{task_name}: head-body misalignment {metric}")
     plt.tight_layout()
 
-    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_barplot.png"
+    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_barplot.pdf"
     plt.savefig(fig_path, dpi=300)
     plt.close()
 
-    print(f"Saved CSV: {csv_path}")
+    print(f"Saved Excel: {excel_path}")
     print(f"Saved figure: {fig_path}")
 
 

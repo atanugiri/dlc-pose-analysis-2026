@@ -40,8 +40,8 @@ python -m scripts.pipelines.run_curvature_analysis \
 
 echo "Combining ToyRAT + ToyStick curvature..."
 python -m scripts.pipelines.combine_task_analysis \
-  results/curvature_analysis/toyrat_mean_midback_sw_5_lt_0.5_st_0.01_curvature_summary.csv \
-  results/curvature_analysis/toystick_mean_midback_sw_5_lt_0.5_st_0.01_curvature_summary.csv \
+  results/curvature_analysis/toyrat_mean_midback_sw_5_lt_0.5_st_0.01_curvature_summary.xlsx \
+  results/curvature_analysis/toystick_mean_midback_sw_5_lt_0.5_st_0.01_curvature_summary.xlsx \
   --feature 'curvature' --output-name toyrat_toystick
 
 # Angle analysis for all tasks
@@ -52,6 +52,6 @@ python -m scripts.pipelines.run_angle_analysis \
 
 echo "Combining ToyRAT + ToyStick angle..."
 python -m scripts.pipelines.combine_task_analysis \
-  results/angle_analysis/toyrat_lt_0.8_median_summary.csv \
-  results/angle_analysis/toystick_lt_0.8_median_summary.csv \
+  results/angle_analysis/toyrat_lt_0.8_median_summary.xlsx \
+  results/angle_analysis/toystick_lt_0.8_median_summary.xlsx \
   --feature 'median' --output-name toyrat_toystick
