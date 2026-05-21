@@ -33,6 +33,9 @@ __pycache__/
 *.pptx
 *.pickle
 *.png
+*.mp4
+*.avi
+*.mkv
 
 # Notebook
 *.ipynb
