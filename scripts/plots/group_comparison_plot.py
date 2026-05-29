@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True, test='welch', plot_type='bar'):
+def plot_group_comparison(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True, test='welch', plot_type='bar'):
 	"""Plot grouped values as bar (mean +/- SE) or box plots.
 	
 	Args:
@@ -52,7 +52,7 @@ def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean 
 			stat_text = f"Mann-Whitney U: U={stat:.3g}, p={p_value:.3g}"
 		else:
 			stat, p_value, df = _welch_t_with_df(arrays[0], arrays[1])
-			stat_text = f"Welch t-test: t({df:.3g}) = {stat:.3g}, p={p_value:.3g}"
+			stat_text = f"Welch t-test: t({df:.2f}) = {stat:.3g}, p={p_value:.3g}"
 	elif len(arrays) > 2:
 		stat, p_value = stats.f_oneway(*arrays)
 		df_between = len(arrays) - 1

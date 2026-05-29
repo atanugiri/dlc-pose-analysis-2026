@@ -9,7 +9,8 @@ echo "Combining ToyRAT + ToyStick speed..."
 python -m scripts.pipelines.combine_task_analysis \
   results/speed_analysis/toyrat_head_sw_None_lt_None_speed_summary.xlsx \
   results/speed_analysis/toystick_head_sw_None_lt_None_speed_summary.xlsx \
-  --output-name toyrat_toystick
+  --output-name toyrat_toystick \
+  --feature 'speed' --plot-type 'box'
 
 # Curvature analysis for all tasks
 echo "Running curvature analysis..."

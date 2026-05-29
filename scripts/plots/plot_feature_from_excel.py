@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from scripts.config import RESULTS_DIR
-from scripts.plots.group_comparison_plot import barplot_mean_se
+from scripts.plots.group_comparison_plot import plot_group_comparison
 
 
 def _to_numeric_values(series: pd.Series) -> list[float]:
@@ -43,7 +43,7 @@ def _plot_bar(
     feature_name: str,
     test: str,
 ) -> plt.Axes:
-    ax = barplot_mean_se(
+    ax = plot_group_comparison(
         saline_values,
         ghrelin_values,
         labels=["Saline", "Ghrelin"],

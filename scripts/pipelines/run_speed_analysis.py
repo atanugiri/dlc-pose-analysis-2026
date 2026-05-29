@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
 from scripts.features.motion_features import summarize_speed_from_ids
-from scripts.plots.group_comparison_plot import barplot_mean_se
+from scripts.plots.group_comparison_plot import plot_group_comparison
 
 
 def main() -> None:
@@ -107,7 +107,7 @@ def main() -> None:
     excel_path = speed_analysis_dir / f"{task_name.lower()}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_speed_summary.xlsx"
     summary_df.to_excel(excel_path, index=False)
 
-    ax = barplot_mean_se(
+    ax = plot_group_comparison(
         speed_saline,
         speed_ghrelin,
         labels=["Saline", "Ghrelin"],

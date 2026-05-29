@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from scripts.config import RESULTS_DIR
-from scripts.plots.group_comparison_plot import barplot_mean_se
+from scripts.plots.group_comparison_plot import plot_group_comparison
 
 
 def main() -> None:
@@ -73,7 +73,7 @@ def main() -> None:
     print(f"Ghrelin samples: {len(ghrelin_values)}")
 
     # Create plot
-    ax = barplot_mean_se(
+    ax = plot_group_comparison(
         saline_values,
         ghrelin_values,
         labels=["Saline", "Ghrelin"],

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
 from scripts.features.angle_features import head_body_misalignment_metrics_from_ids
-from scripts.plots.group_comparison_plot import barplot_mean_se
+from scripts.plots.group_comparison_plot import plot_group_comparison
 
 
 def main() -> None:
@@ -96,7 +96,7 @@ def main() -> None:
     excel_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_summary.xlsx"
     summary_df.to_excel(excel_path, index=False)
 
-    ax = barplot_mean_se(
+    ax = plot_group_comparison(
         angle_saline,
         angle_ghrelin,
         labels=["Saline", "Ghrelin"],
