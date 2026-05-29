@@ -53,6 +53,12 @@ def main() -> None:
         default='welch',
         help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
     )
+    parser.add_argument(
+        "--plot-type",
+        choices=["bar", "box"],
+        default="bar",
+        help="Plot style to generate.",
+    )
 
     args = parser.parse_args()
 
@@ -114,12 +120,13 @@ def main() -> None:
         labels=["Saline", "Ghrelin"],
         ylabel=f"{args.how.capitalize()} curvature",
         test=args.test,
+        plot_type=args.plot_type,
     )
 
     ax.set_title(f"{task_name}: {args.bodypart} curvature")
     plt.tight_layout()
 
-    fig_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_barplot.pdf"
+    fig_path = curvature_analysis_dir / f"{task_name.lower()}_{args.how}_{args.bodypart.lower()}_sw_{args.smoothing_window}_lt_{args.likelihood_threshold}_st_{args.speed_thresh}_curvature_{args.plot_type}plot.pdf"
     plt.savefig(fig_path, dpi=300)
 
     print(f"Saved Excel: {excel_path}")

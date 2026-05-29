@@ -39,6 +39,12 @@ def main() -> None:
         default='welch',
         help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
     )
+    parser.add_argument(
+        "--plot-type",
+        choices=["bar", "box"],
+        default="bar",
+        help="Plot style to generate.",
+    )
 
     args = parser.parse_args()
 
@@ -96,12 +102,13 @@ def main() -> None:
         labels=["Saline", "Ghrelin"],
         ylabel=f"Head-body misalignment {metric} (rad)",
         test=args.test,
+        plot_type=args.plot_type,
     )
 
     ax.set_title(f"{task_name}: head-body misalignment {metric}")
     plt.tight_layout()
 
-    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_barplot.pdf"
+    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_{args.plot_type}plot.pdf"
     plt.savefig(fig_path, dpi=300)
     plt.close()
 

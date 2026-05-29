@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True, test='welch'):
-	"""Plot mean bars with standard error for variable list inputs.
+def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean ± SE", show_points=True, test='welch', plot_type='bar'):
+	"""Plot grouped values as bar (mean +/- SE) or box plots.
 	
 	Args:
 		test: 'welch' (two-tailed), 'welch_greater', 'welch_less', or 'mann_whitney'
+		plot_type: 'bar' or 'box'
 	"""
 	if len(value_lists) == 0:
 		raise ValueError("Provide at least one list of values.")
+	if plot_type not in {'bar', 'box'}:
+		raise ValueError("plot_type must be 'bar' or 'box'.")
 
 	arrays = [np.asarray(v, dtype=float) for v in value_lists]
 	arrays = [a[np.isfinite(a)] for a in arrays]
@@ -43,17 +46,25 @@ def barplot_mean_se(*value_lists, labels=None, colors=None, ax=None, capsize=5, 
 	if len(labels) != len(arrays):
 		raise ValueError("labels length must match number of input lists.")
 
-	if colors is None:
-		cmap = plt.get_cmap("tab10")
-		colors = [cmap(i % 10) for i in range(len(arrays))]
-	if len(colors) != len(arrays):
-		raise ValueError("colors length must match number of input lists.")
+	cmap = plt.get_cmap("tab10")
+	colors = [cmap(i % 10) for i in range(len(arrays))]
 
 	if ax is None:
 		_, ax = plt.subplots()
 
 	x = np.arange(len(arrays))
-	ax.bar(x, means, yerr=ses, color=colors, capsize=capsize)
+	if plot_type == 'bar':
+		ax.bar(x, means, yerr=ses, color=colors, capsize=capsize)
+	else:
+		box = ax.boxplot(
+			arrays,
+			positions=x,
+			widths=0.6,
+			patch_artist=True,
+		)
+		for patch, color in zip(box['boxes'], colors):
+			patch.set_facecolor(color)
+			patch.set_alpha(0.65)
 	ax.set_xticks(x)
 	ax.set_xticklabels(labels)
 	ax.set_ylabel(ylabel)

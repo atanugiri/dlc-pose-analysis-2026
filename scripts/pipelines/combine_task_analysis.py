@@ -38,6 +38,12 @@ def main() -> None:
         default='welch',
         help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
     )
+    parser.add_argument(
+        "--plot-type",
+        choices=["bar", "box"],
+        default="bar",
+        help="Plot style to generate.",
+    )
 
     args = parser.parse_args()
 
@@ -71,8 +77,9 @@ def main() -> None:
         saline_values,
         ghrelin_values,
         labels=["Saline", "Ghrelin"],
-        ylabel=f"Mean ± SE {feature}",
+        ylabel=feature,
         test=args.test,
+        plot_type=args.plot_type,
     )
 
     ax.set_title(f"Combined tasks: {feature}")
@@ -94,7 +101,7 @@ def main() -> None:
     excel_path = analysis_dir / f"{args.output_name}_{feature}_summary.xlsx"
     combined_df.to_excel(excel_path, index=False)
 
-    fig_path = analysis_dir / f"{args.output_name}_{feature}_barplot.pdf"
+    fig_path = analysis_dir / f"{args.output_name}_{feature}_{args.plot_type}plot.pdf"
     plt.savefig(fig_path, dpi=300)
 
     print(f"Saved combined Excel: {excel_path}")
