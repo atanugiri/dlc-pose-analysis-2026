@@ -2,8 +2,8 @@
 set -euo pipefail
 
 echo "Running speed analysis..."
-python -m scripts.pipelines.run_speed_analysis --task ToyRAT --individual m1
-python -m scripts.pipelines.run_speed_analysis --task ToyStick
+python -m scripts.pipelines.run_speed_analysis --task ToyRAT --individual m1 --plot-type box
+python -m scripts.pipelines.run_speed_analysis --task ToyStick --plot-type box
 
 echo "Combining ToyRAT + ToyStick speed..."
 python -m scripts.pipelines.combine_task_analysis \

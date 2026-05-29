@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
 from scripts.features.trajectory_curvature import summarize_curvature_from_ids
-from scripts.plots.feature_barplot import barplot_mean_se
+from scripts.plots.group_comparison_plot import barplot_mean_se
 
 
 def main() -> None:
@@ -49,7 +49,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--test",
-        choices=['welch', 'welch_greater', 'welch_less', 'mann_whitney'],
+        choices=['welch', 'mann_whitney'],
         default='welch',
         help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
     )

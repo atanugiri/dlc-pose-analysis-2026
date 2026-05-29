@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from scripts.config import RESULTS_DIR
-from scripts.plots.feature_barplot import barplot_mean_se
+from scripts.plots.group_comparison_plot import barplot_mean_se
 
 
 def _to_numeric_values(series: pd.Series) -> list[float]:
@@ -133,7 +133,7 @@ def main() -> None:
     parser.add_argument("--plot-kind", choices=["bar", "box"], default="bar")
     parser.add_argument(
         "--test",
-        choices=["welch", "welch_greater", "welch_less", "mann_whitney"],
+        choices=["welch", "mann_whitney"],
         default="welch",
     )
     parser.add_argument("--outdir", type=Path, default=RESULTS_DIR / "feature_barplots")

@@ -7,13 +7,15 @@ def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean 
 	"""Plot grouped values as bar (mean +/- SE) or box plots.
 	
 	Args:
-		test: 'welch' (two-tailed), 'welch_greater', 'welch_less', or 'mann_whitney'
+		test: 'welch' (two-tailed) or 'mann_whitney'
 		plot_type: 'bar' or 'box'
 	"""
 	if len(value_lists) == 0:
 		raise ValueError("Provide at least one list of values.")
 	if plot_type not in {'bar', 'box'}:
 		raise ValueError("plot_type must be 'bar' or 'box'.")
+	if test not in {'welch', 'mann_whitney'}:
+		raise ValueError("test must be 'welch' or 'mann_whitney'.")
 
 	arrays = [np.asarray(v, dtype=float) for v in value_lists]
 	arrays = [a[np.isfinite(a)] for a in arrays]
@@ -21,20 +23,36 @@ def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean 
 		raise ValueError("Each input list must contain at least one finite value.")
 	means = [a.mean() for a in arrays]
 	ses = [a.std(ddof=1) / np.sqrt(len(a)) if len(a) > 1 else 0.0 for a in arrays]
+
+	def _welch_t_with_df(a1, a2, alternative='two-sided'):
+		res = stats.ttest_ind(a1, a2, equal_var=False, alternative=alternative)
+		if hasattr(res, "statistic") and hasattr(res, "pvalue"):
+			stat = float(res.statistic)
+			p_value = float(res.pvalue)
+			df = getattr(res, "df", np.nan)
+			if np.isfinite(df):
+				return stat, p_value, float(df)
+		else:
+			stat, p_value = res
+
+		n1, n2 = len(a1), len(a2)
+		v1 = np.var(a1, ddof=1) if n1 > 1 else 0.0
+		v2 = np.var(a2, ddof=1) if n2 > 1 else 0.0
+		denom_sq = (v1 / n1 + v2 / n2) ** 2
+		term1 = ((v1 / n1) ** 2) / (n1 - 1) if n1 > 1 else 0.0
+		term2 = ((v2 / n2) ** 2) / (n2 - 1) if n2 > 1 else 0.0
+		df_denom = term1 + term2
+		df = denom_sq / df_denom if df_denom > 0 else np.nan
+		return float(stat), float(p_value), float(df)
+
 	stat_text = None
 	if len(arrays) == 2:
 		if test == 'mann_whitney':
 			stat, p_value = stats.mannwhitneyu(arrays[0], arrays[1], alternative='two-sided')
 			stat_text = f"Mann-Whitney U: U={stat:.3g}, p={p_value:.3g}"
-		elif test == 'welch_greater':
-			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False, alternative='greater')
-			stat_text = f"Welch t-test (>): t={stat:.3g}, p={p_value:.3g}"
-		elif test == 'welch_less':
-			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False, alternative='less')
-			stat_text = f"Welch t-test (<): t={stat:.3g}, p={p_value:.3g}"
-		else:  # 'welch' or default
-			stat, p_value = stats.ttest_ind(arrays[0], arrays[1], equal_var=False)
-			stat_text = f"Welch t-test: t={stat:.3g}, p={p_value:.3g}"
+		else:
+			stat, p_value, df = _welch_t_with_df(arrays[0], arrays[1])
+			stat_text = f"Welch t-test: t({df:.3g}) = {stat:.3g}, p={p_value:.3g}"
 	elif len(arrays) > 2:
 		stat, p_value = stats.f_oneway(*arrays)
 		df_between = len(arrays) - 1
@@ -56,15 +74,17 @@ def barplot_mean_se(*value_lists, labels=None, ax=None, capsize=5, ylabel="Mean 
 	if plot_type == 'bar':
 		ax.bar(x, means, yerr=ses, color=colors, capsize=capsize)
 	else:
-		box = ax.boxplot(
+		ax.boxplot(
 			arrays,
 			positions=x,
-			widths=0.6,
+			widths=0.5,
 			patch_artist=True,
+			showfliers=False,
+			boxprops=dict(facecolor="white", edgecolor="black"),
+			medianprops=dict(color="black", linewidth=1.5),
+			whiskerprops=dict(color="black"),
+			capprops=dict(color="black"),
 		)
-		for patch, color in zip(box['boxes'], colors):
-			patch.set_facecolor(color)
-			patch.set_alpha(0.65)
 	ax.set_xticks(x)
 	ax.set_xticklabels(labels)
 	ax.set_ylabel(ylabel)
