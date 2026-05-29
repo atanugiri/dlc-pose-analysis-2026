@@ -34,6 +34,6 @@ python -m scripts.pipelines.run_angle_analysis \
 
 echo "Combining ToyRAT + ToyStick angle..."
 python -m scripts.pipelines.combine_task_analysis \
-  results/angle_analysis/toyrat_lt_0.8_median_summary.xlsx \
-  results/angle_analysis/toystick_lt_0.8_median_summary.xlsx \
-  --feature median --output-name toyrat_toystick --plot-type box
+  results/angle_analysis/toyrat_lt_0.8_angle_summary.xlsx \
+  results/angle_analysis/toystick_lt_0.8_angle_summary.xlsx \
+  --feature angle --output-name toyrat_toystick --plot-type box

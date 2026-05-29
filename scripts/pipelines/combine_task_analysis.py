@@ -30,7 +30,7 @@ def main() -> None:
         "--feature",
         type=str,
         default="speed",
-        help="Feature column name (default: 'speed', options: 'speed', 'curvature', 'head_body_misalignment_p95')",
+        help="Feature column name (default: 'speed', options: 'speed', 'curvature', 'angle')",
     )
     parser.add_argument(
         "--test",
@@ -92,7 +92,7 @@ def main() -> None:
     feature_dir_map = {
         "speed": "speed_analysis",
         "curvature": "curvature_analysis",
-        "median": "angle_analysis",
+        "angle": "angle_analysis",
     }
     analysis_subdir = feature_dir_map.get(feature, "analysis")
     analysis_dir = RESULTS_DIR / analysis_subdir
