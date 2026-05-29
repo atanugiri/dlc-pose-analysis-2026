@@ -89,11 +89,11 @@ def main() -> None:
                 ["Saline"] * len(angle_saline)
                 + ["Ghrelin"] * len(angle_ghrelin)
             ),
-            metric: angle_saline + angle_ghrelin,
+            "angle": angle_saline + angle_ghrelin,
         }
     )
 
-    excel_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_summary.xlsx"
+    excel_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_summary.xlsx"
     summary_df.to_excel(excel_path, index=False)
 
     ax = plot_group_comparison(
@@ -108,7 +108,7 @@ def main() -> None:
     ax.set_title(f"{task_name}: head-body misalignment {metric}")
     plt.tight_layout()
 
-    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_{metric}_{args.plot_type}plot.pdf"
+    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_{args.plot_type}plot.pdf"
     plt.savefig(fig_path, dpi=300)
     plt.close()
 
