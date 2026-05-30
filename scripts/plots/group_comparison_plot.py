@@ -79,7 +79,7 @@ def plot_group_comparison(*value_lists, labels=None, ax=None, capsize=5, ylabel=
 			positions=x,
 			widths=0.5,
 			patch_artist=True,
-			showfliers=False,
+			showfliers=True,
 			boxprops=dict(facecolor="white", edgecolor="black"),
 			medianprops=dict(color="black", linewidth=1.5),
 			whiskerprops=dict(color="black"),
@@ -102,6 +102,6 @@ def plot_group_comparison(*value_lists, labels=None, ax=None, capsize=5, ylabel=
 	if show_points:
 		for i, a in enumerate(arrays):
 			x_i = np.random.normal(i, 0.05, size=len(a))
-			ax.scatter(x_i, a, color=colors[i], alpha=0.6, edgecolor='k')
+			ax.scatter(x_i, a, color=colors[i], alpha=0.6, edgecolor='k', zorder=3)
 
 	return ax

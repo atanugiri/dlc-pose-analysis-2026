@@ -78,6 +78,7 @@ def main() -> None:
         ghrelin_values,
         labels=["Saline", "Ghrelin"],
         ylabel=feature,
+        show_points=True,
         test=args.test,
         plot_type=args.plot_type,
     )
