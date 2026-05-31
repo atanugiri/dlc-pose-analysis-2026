@@ -5,10 +5,9 @@ This repository contains DeepLabCut-based trajectory analysis pipelines for sali
 ## Repository Layout
 
 - `data/filtered_pose_data/`: filtered DeepLabCut `.h5` files
-- `data/raw_pose_data/`: raw DeepLabCut outputs
 - `database/`: schema, views, and import SQL
 - `scripts/features/`: feature extraction code
-- `scripts/plots/`: plotting utilities (including `barplot_mean_se`)
+- `scripts/plots/`: plotting utilities (including `group_comparison_plot`)
 - `scripts/pipelines/`: runnable analysis pipelines
 - `results/`: generated Excel summaries and figures
 - `notebooks/`: exploratory analysis notebooks
@@ -24,81 +23,61 @@ conda activate ghrelin
 Then run pipelines with module syntax from repository root:
 
 ```bash
-python -m scripts.pipelines.run_speed_analysis --task ChickenBroth
+python -m scripts.pipelines.run_speed_analysis --task ToyRAT
 ```
 
-## Database Setup (PostgreSQL)
+## CSV Export And Rebuild Workflow
 
-1. Start PostgreSQL.
-2. Create database:
+For code submission, the PostgreSQL-backed metadata tables can be exported as CSV and later re-imported.
 
-```sql
-CREATE DATABASE dlc_pose_analysis_2026;
+Export current DB tables to CSV files in `data/` with `psql`:
+
+```bash
+psql -d dlc_pose_analysis_2026 -c "\copy (SELECT * FROM public.experimental_metadata ORDER BY id) TO 'data/experimental_metadata.csv' CSV HEADER"
+psql -d dlc_pose_analysis_2026 -c "\copy (SELECT * FROM public.maze_map ORDER BY task, genotype, animal_name, start_date, end_date) TO 'data/maze_map.csv' CSV HEADER"
 ```
 
-3. Run SQL files in order:
+This writes:
 
-- `database/01_schema.sql`
-- `database/02_views.sql`
-- `database/03_import.sql`
-- `database/04_maze_map.sql`
-- `database/04_set_maze_number_from_maze_map.sql`
+- `data/experimental_metadata.csv`
+- `data/maze_map.csv`
+
+Recreate DB table contents from those CSV files:
+
+```bash
+python -m scripts.db.import_project_csvs_to_postgres
+```
+
+Notes:
+
+- The import script uses pandas `to_sql` with fixed `if_exists=replace` behavior.
+- Reproducibility without `.env`: open `scripts/config.py`.
+- Edit defaults in `DB_CONNECT_KWARGS` to match your local PostgreSQL (`host`, `port`, `user`, `password`, `database`).
+- Run `python -m scripts.db.import_project_csvs_to_postgres`.
+- Run analysis pipelines normally.
+- For reproducibility, include the two CSV files plus this import command in your submission instructions.
 
 ## Analysis Pipelines
 
-All pipeline scripts compare saline (`Y`) vs ghrelin (`P`) groups and save both Excel summaries and barplots.
-
-### 1) Speed
+Use [runme.sh](runme.sh) as the source of truth for exact execution steps.
 
 ```bash
-python -m scripts.pipelines.run_speed_analysis \
-  --task ChickenBroth \
-  --bodypart Head \
-  --how mean
+bash runme.sh
 ```
 
-### 2) Curvature
-
-```bash
-python -m scripts.pipelines.run_curvature_analysis \
-  --task ChickenBroth \
-  --bodypart Midback \
-  --how mean \
-  --smoothing-window 5 \
-  --speed-thresh 0.01
-```
-
-### 3) Head-Body Misalignment Angle
-
-```bash
-python -m scripts.pipelines.run_angle_analysis \
-  --task ChickenBroth \
-  --metric p95
-```
-
-### 4) Combine Multiple Task Summaries
-
-```bash
-python -m scripts.pipelines.combine_task_analysis \
-  results/speed_analysis/task_a_speed_summary.xlsx \
-  results/speed_analysis/task_b_speed_summary.xlsx \
-  --feature speed \
-  --output-name combined_tasks
-```
+For custom runs, use each pipeline module with `--help`.
 
 ## Statistical Tests
 
-Pipelines that call `barplot_mean_se` support:
+Pipelines that call `group_comparison_plot` support:
 
 - `welch` (default, two-tailed Welch t-test)
-- `welch_greater`
-- `welch_less`
 - `mann_whitney`
 
 Pass with `--test`, for example:
 
 ```bash
-python -m scripts.pipelines.run_speed_analysis --task ChickenBroth --test mann_whitney
+python -m scripts.pipelines.run_speed_analysis --task ToyRAT --test mann_whitney
 ```
 
 ## Outputs
@@ -110,4 +89,4 @@ python -m scripts.pipelines.run_speed_analysis --task ChickenBroth --test mann_w
 Each run writes:
 
 1. Summary Excel file (`*_summary.xlsx`)
-2. Bar plot (`*_barplot.pdf`)
+2. Plot (`*_barplot.pdf` or `*_boxplot.pdf`)
