@@ -39,3 +39,6 @@ __pycache__/
 
 # Notebook
 *.ipynb
+
+# Docs
+DB_BOOTSTRAP_HISTORY.md
