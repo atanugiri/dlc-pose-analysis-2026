@@ -1,4 +1,4 @@
--- 04_set_maze_number_from_maze_map.sql
+-- 05_set_maze_number_from_maze_map.sql
 -- Populate experimental_metadata.maze_number from maze_map.
 -- Run the preview query first to verify rows, then run the update inside a transaction.
 
