@@ -1,0 +1,14 @@
+name: ghrelin
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10,<3.13
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - sqlalchemy
+  - psycopg2
+  - openpyxl
+  - tables
+  - ipykernel

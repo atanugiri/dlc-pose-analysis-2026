@@ -17,6 +17,7 @@ This repository contains DeepLabCut-based trajectory analysis pipelines for sali
 Use the conda environment used for this project (example):
 
 ```bash
+conda env create -f environment.yml
 conda activate ghrelin
 ```
 
