@@ -40,5 +40,8 @@ __pycache__/
 # Notebook
 *.ipynb
 
+# Local environment files
+.env
+
 # Docs
 DB_BOOTSTRAP_HISTORY.md

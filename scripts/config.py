@@ -1,8 +1,12 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # repo root = 2 levels above scripts/
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Load .env from project root; existing shell env vars still win.
+load_dotenv(REPO_ROOT / ".env", override=False)
 
 DATA_DIR = REPO_ROOT / "data"
 RESULTS_DIR = REPO_ROOT / "results"

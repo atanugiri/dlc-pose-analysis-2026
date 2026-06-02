@@ -21,6 +21,16 @@ conda env create -f environment.yml
 conda activate ghrelin
 ```
 
+Create `.env` in project root and add your local PostgreSQL settings, for example:
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=atanugiri
+DB_PASSWORD=
+DB_NAME=dlc_pose_analysis_2026
+```
+
 Then run pipelines with module syntax from repository root:
 
 ```bash
@@ -52,8 +62,8 @@ python -m scripts.db.import_project_csvs_to_postgres
 Notes:
 
 - The import script uses pandas `to_sql` with fixed `if_exists=replace` behavior.
-- Reproducibility without `.env`: open `scripts/config.py`.
-- Edit defaults in `DB_CONNECT_KWARGS` to match your local PostgreSQL (`host`, `port`, `user`, `password`, `database`).
+- Preferred setup: configure local DB settings in `.env` (loaded by `python-dotenv` in `scripts/config.py`).
+- Fallback setup: edit defaults in `scripts/config.py` (`DB_CONNECT_KWARGS`).
 - Run `python -m scripts.db.import_project_csvs_to_postgres`.
 - Run analysis pipelines normally.
 - For reproducibility, include the two CSV files plus this import command in your submission instructions.
