@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import create_engine
 
-from scripts.config import DATA_DIR, DB_CONNECT_KWARGS
+from scripts.config import DB_CONNECT_KWARGS
 
 
 def create_sqlalchemy_engine():
@@ -29,44 +29,46 @@ def read_csv_with_dates(csv_path: Path, table_name: str) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Import project CSV files into PostgreSQL tables using pandas.to_sql."
+        description="Import one CSV file into PostgreSQL using pandas.to_sql."
     )
     parser.add_argument(
-        "--csv-dir",
+        "--csv-file",
         type=Path,
-        default=DATA_DIR,
-        help="Directory containing CSV files (default: data/).",
+        required=True,
+        help="Full path to CSV file to import.",
+    )
+    parser.add_argument(
+        "--table",
+        type=str,
+        required=True,
+        help="Target table name (for example: experimental_metadata or maze_map).",
     )
     args = parser.parse_args()
 
-    csv_to_table = {
-        "experimental_metadata.csv": "experimental_metadata",
-        "maze_map.csv": "maze_map",
-    }
+    csv_path = args.csv_file
+    table_name = args.table
 
     engine = create_sqlalchemy_engine()
 
-    print("Importing CSV files into PostgreSQL:")
+    print("Importing CSV file into PostgreSQL:")
     try:
-        for csv_name, table_name in csv_to_table.items():
-            csv_path = args.csv_dir / csv_name
-            if not csv_path.exists():
-                raise FileNotFoundError(f"Could not find CSV: {csv_path}")
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Could not find CSV: {csv_path}")
 
-            print(f"\nImporting:")
-            print(f"  CSV:   {csv_path}")
-            print(f"  Table: {table_name}")
+        print(f"\nImporting:")
+        print(f"  CSV:   {csv_path}")
+        print(f"  Table: {table_name}")
 
-            df = read_csv_with_dates(csv_path, table_name)
-            df.to_sql(
-                table_name,
-                engine,
-                schema="public",
-                if_exists="replace",
-                index=False,
-            )
+        df = read_csv_with_dates(csv_path, table_name)
+        df.to_sql(
+            table_name,
+            engine,
+            schema="public",
+            if_exists="replace",
+            index=False,
+        )
 
-            print(f"Done: {len(df)} rows x {len(df.columns)} columns")
+        print(f"Done: {len(df)} rows x {len(df.columns)} columns")
     finally:
         engine.dispose()
 

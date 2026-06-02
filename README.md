@@ -56,7 +56,8 @@ This writes:
 Recreate DB table contents from those CSV files:
 
 ```bash
-python -m scripts.db.import_project_csvs_to_postgres
+python -m scripts.db.import_project_csvs_to_postgres --csv-file data/experimental_metadata.csv --table experimental_metadata
+python -m scripts.db.import_project_csvs_to_postgres --csv-file data/maze_map.csv --table maze_map
 ```
 
 Notes:
@@ -64,7 +65,7 @@ Notes:
 - The import script uses pandas `to_sql` with fixed `if_exists=replace` behavior.
 - Preferred setup: configure local DB settings in `.env` (loaded by `python-dotenv` in `scripts/config.py`).
 - Fallback setup: edit defaults in `scripts/config.py` (`DB_CONNECT_KWARGS`).
-- Run `python -m scripts.db.import_project_csvs_to_postgres`.
+- Run the import command above for each CSV file you want to load.
 - Run analysis pipelines normally.
 - For reproducibility, include the two CSV files plus this import command in your submission instructions.
 
