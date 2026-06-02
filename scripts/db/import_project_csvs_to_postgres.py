@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 from pathlib import Path
+import sys
 
 import pandas as pd
 from sqlalchemy import create_engine
 
-from scripts.config import DB_CONNECT_KWARGS
+repo_root = Path(__file__).resolve().parents[2]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
+DB_CONNECT_KWARGS = importlib.import_module("scripts.config").DB_CONNECT_KWARGS
 
 
 def create_sqlalchemy_engine():
@@ -16,15 +22,8 @@ def create_sqlalchemy_engine():
     database = DB_CONNECT_KWARGS["database"]
 
     db_url = f"postgresql+psycopg2://{user}@{host}:{port}/{database}"
+    print(f"Connecting to database with URL: {db_url}")
     return create_engine(db_url)
-
-
-def read_csv_with_dates(csv_path: Path, table_name: str) -> pd.DataFrame:
-    parse_dates_map = {
-        "experimental_metadata": ["session_date"],
-        "maze_map": ["start_date", "end_date"],
-    }
-    return pd.read_csv(csv_path, parse_dates=parse_dates_map.get(table_name, None))
 
 
 def main() -> None:
@@ -59,7 +58,7 @@ def main() -> None:
         print(f"  CSV:   {csv_path}")
         print(f"  Table: {table_name}")
 
-        df = read_csv_with_dates(csv_path, table_name)
+        df = pd.read_csv(csv_path)
         df.to_sql(
             table_name,
             engine,
