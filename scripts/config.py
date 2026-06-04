@@ -9,11 +9,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 env_file_name = os.getenv("ENV_FILE", ".env")
 load_dotenv(REPO_ROOT / env_file_name, override=False)
 
-DATA_DIR = REPO_ROOT / "data"
 paper_tag = os.getenv("PAPER_TAG", "").strip()
-RESULTS_DIR = REPO_ROOT / "results"
-if paper_tag:
-    RESULTS_DIR = RESULTS_DIR / paper_tag
+base_data_dir = REPO_ROOT / "data"
+paper_data_dir = base_data_dir / paper_tag if paper_tag else base_data_dir
+DATA_DIR = paper_data_dir if paper_data_dir.exists() else base_data_dir
+
+base_results_dir = REPO_ROOT / "results"
+results_dir = base_results_dir / paper_tag if paper_tag else base_results_dir
+RESULTS_DIR = results_dir if results_dir.exists() else base_results_dir
 NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 
 DEFAULT_FPS = float(os.getenv("DEFAULT_FPS", 15.0))
