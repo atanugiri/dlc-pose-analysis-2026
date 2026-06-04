@@ -10,10 +10,14 @@ env_file_name = os.getenv("ENV_FILE", ".env")
 load_dotenv(REPO_ROOT / env_file_name, override=False)
 
 DATA_DIR = REPO_ROOT / "data"
+paper_tag = os.getenv("PAPER_TAG", "").strip()
 RESULTS_DIR = REPO_ROOT / "results"
+if paper_tag:
+    RESULTS_DIR = RESULTS_DIR / paper_tag
 NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 
-DEFAULT_FPS = 15.0
+DEFAULT_FPS = float(os.getenv("DEFAULT_FPS", 15.0))
+MAZE_SIZE_CM = float(os.getenv("MAZE_SIZE_CM", 64))
 
 DB_CONNECT_KWARGS = {
     "host": os.getenv("DB_HOST", "localhost"),

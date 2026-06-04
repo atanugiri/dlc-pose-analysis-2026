@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 import scripts.features.feature_summary as feature_summary
+from scripts.config import MAZE_SIZE_CM
 from scripts.features.normalize_pose import (
     normalize_bodypart_from_id,
     get_bodypart_from_id,
@@ -48,11 +49,10 @@ def compute_velocity_from_id(
     likelihood = pd.Series(likelihood, index=index, dtype=float)
     t = pd.Series(time, index=index).astype(float)
 
-    # Convert normalized coordinates to cm (1 unit = 64 cm)
+    # Convert normalized coordinates to cm (1 unit = MAZE_SIZE_CM cm)
     if normalization:
-        maze_size_cm = 64
-        x = x * maze_size_cm
-        y = y * maze_size_cm
+        x = x * MAZE_SIZE_CM
+        y = y * MAZE_SIZE_CM
 
     # Compute velocities
     dt = t.diff().replace(0, np.nan)
