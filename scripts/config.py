@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 # repo root = 2 levels above scripts/
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Load .env from project root; existing shell env vars still win.
-load_dotenv(REPO_ROOT / ".env", override=False)
+# Select dotenv file via ENV_FILE (default: .env) and load from project root.
+env_file_name = os.getenv("ENV_FILE", ".env")
+load_dotenv(REPO_ROOT / env_file_name, override=False)
 
 DATA_DIR = REPO_ROOT / "data"
 RESULTS_DIR = REPO_ROOT / "results"
