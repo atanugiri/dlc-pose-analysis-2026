@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from scripts.config import DEFAULT_FPS, DB_CONNECT_KWARGS, DATA_DIR
+from scripts.config import DEFAULT_FPS, DB_CONNECT_KWARGS, DATA_DIR, EXCLUDED_IDS
 
 
 def connect():
@@ -49,7 +49,10 @@ def get_treatment_ids(task: str, treatment: str) -> list[int]:
           AND treatment = %s
         ORDER BY id;
     """
-    return fetch_ids_with_params(query, (task, treatment))
+    ids = fetch_ids_with_params(query, (task, treatment))
+    if not EXCLUDED_IDS:
+        return ids
+    return [record_id for record_id in ids if record_id not in EXCLUDED_IDS]
         
 def get_filtered_pose_file(record_id: int) -> str:
     """Return experimental_metadata.filtered_pose_file for a given id."""

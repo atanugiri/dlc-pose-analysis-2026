@@ -9,6 +9,19 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 env_file_name = os.getenv("ENV_FILE", ".env")
 load_dotenv(REPO_ROOT / env_file_name, override=False)
 
+
+def _parse_int_set(csv_value: str) -> set[int]:
+    values: set[int] = set()
+    for token in csv_value.split(","):
+        token = token.strip()
+        if not token:
+            continue
+        try:
+            values.add(int(token))
+        except ValueError as exc:
+            raise ValueError(f"Invalid integer in EXCLUDED_IDS: {token!r}") from exc
+    return values
+
 paper_tag = os.getenv("PAPER_TAG", "").strip()
 base_data_dir = REPO_ROOT / "data"
 paper_data_dir = base_data_dir / paper_tag if paper_tag else base_data_dir
@@ -21,6 +34,7 @@ NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 
 DEFAULT_FPS = float(os.getenv("DEFAULT_FPS", 15.0))
 MAZE_SIZE_CM = float(os.getenv("MAZE_SIZE_CM", 64))
+EXCLUDED_IDS = _parse_int_set(os.getenv("EXCLUDED_IDS", ""))
 
 DB_CONNECT_KWARGS = {
     "host": os.getenv("DB_HOST", "localhost"),
