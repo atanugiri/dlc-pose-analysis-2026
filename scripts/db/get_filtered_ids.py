@@ -60,15 +60,16 @@ def _build_query(filters: Sequence[tuple[str, object]]) -> tuple[str, tuple[obje
     params: list[object] = []
 
     for column_name, value in filters:
-        if value is None:
-            continue
         if column_name not in table_columns:
             available = ", ".join(sorted(table_columns))
             raise ValueError(
                 f"Unknown column {column_name!r}. Available columns: {available}"
             )
-        where_clauses.append(f"{column_name} = %s")
-        params.append(value)
+        if value is None:
+            where_clauses.append(f"{column_name} IS NULL")
+        else:
+            where_clauses.append(f"{column_name} = %s")
+            params.append(value)
 
     if not where_clauses:
         raise ValueError("At least one non-empty filter is required.")
@@ -107,7 +108,7 @@ def main() -> None:
         action="append",
         type=_parse_filter,
         default=[],
-        help="Repeat key=value filters; use None to skip a value.",
+        help="Repeat key=value filters; use None for SQL IS NULL matching.",
     )
     args = parser.parse_args()
 
