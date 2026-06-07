@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 
 
 def main() -> None:
@@ -32,6 +34,24 @@ def main() -> None:
         analysis_name="toystick",
         bodypart="Head",
         plot_type="box",
+    )
+
+    print("Combining ToyRAT + ToyStick speed...")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.pipelines.combine_task_analysis",
+            excel_path_rat,
+            excel_path_stick,
+            "--output-name",
+            "toyrat_toystick",
+            "--feature",
+            "speed",
+            "--plot-type",
+            "box",
+        ],
+        check=True,
     )
 
     print(f"Saved ToyRAT Excel: {excel_path_rat}")
