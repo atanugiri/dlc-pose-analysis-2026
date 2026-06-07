@@ -136,10 +136,14 @@ def get_maze_number(record_id: int) -> int | None:
     return int(row[0])
 
 def load_dlc_dataframe(filtered_pose_file: str) -> pd.DataFrame:
-    """Load a filtered DLC h5 file from data/filtered_pose_data."""
-    h5_path = DATA_DIR / "filtered_pose_data" / filtered_pose_file
+    """Load a filtered DLC file (H5 preferred, CSV fallback) from filtered_pose_data."""
+    base_path = DATA_DIR / "filtered_pose_data" / filtered_pose_file
+    h5_path = base_path.with_suffix(".h5")
 
-    if not h5_path.exists():
-        raise FileNotFoundError(f"File not found: {h5_path}")
+    if h5_path.exists():
+        return pd.read_hdf(h5_path, key="/df_with_missing")
 
-    return pd.read_hdf(h5_path, key="/df_with_missing")
+    if base_path.exists():
+        return pd.read_csv(base_path, header=[0, 1, 2], index_col=0)
+
+    raise FileNotFoundError(f"File not found (tried .h5 and original): {base_path}")
