@@ -6,14 +6,51 @@ export PAPER_TAG=paper2025
 
 RESULTS_ROOT="results/${PAPER_TAG}"
 
-python -m scripts.pipelines.run_speed_analysis --task ToyRAT --individual m1 --plot-type box
-python -m scripts.pipelines.run_speed_analysis --task ToyStick --plot-type box
+GROUP_SPECS=(
+  "WT_Saline|WT|Y|1.0|None"
+  "WT_Ghrelin|WT|P|1.0|None"
+)
 
-python -m scripts.pipelines.combine_task_analysis \
-  "${RESULTS_ROOT}/speed_analysis/toyrat_head_sw_None_lt_None_speed_summary.xlsx" \
-  "${RESULTS_ROOT}/speed_analysis/toystick_head_sw_None_lt_None_speed_summary.xlsx" \
-  --output-name toyrat_toystick \
-  --feature speed --plot-type box
+SPEED_ARGS=()
+for spec in "${GROUP_SPECS[@]}"; do
+  IFS='|' read -r label genotype treatment dose_mult modulation <<< "${spec}"
+
+  ids_csv="$(python - "${genotype}" "${treatment}" "${dose_mult}" "${modulation}" <<'PY'
+import sys
+from scripts.db.db_utils import get_ids_by_filters
+
+genotype, treatment, dose_mult, modulation = sys.argv[1:5]
+
+genotype = None if genotype == "None" else genotype
+treatment = None if treatment == "None" else treatment
+dose_mult = None if dose_mult == "None" else float(dose_mult)
+modulation = None if modulation == "None" else modulation
+
+ids = get_ids_by_filters(
+    genotype=genotype,
+    treatment=treatment,
+    dose_mult=dose_mult,
+    modulation=modulation,
+)
+
+print(",".join(str(record_id) for record_id in ids))
+PY
+)"
+
+  if [[ -z "${ids_csv}" ]]; then
+    echo "No IDs found for group ${label}; skipping this group."
+    continue
+  fi
+
+  SPEED_ARGS+=(--id-list "${ids_csv}" --label "${label}")
+done
+
+if (( ${#SPEED_ARGS[@]} < 4 )); then
+  echo "Need at least two non-empty groups in GROUP_SPECS for speed analysis."
+  exit 1
+fi
+
+python -m scripts.pipelines.run_speed_analysis "${SPEED_ARGS[@]}" --plot-type box
 
 python -m scripts.pipelines.run_curvature_analysis \
   --task ToyRAT --individual m1 --likelihood-threshold 0.5 --normalization false --plot-type box
