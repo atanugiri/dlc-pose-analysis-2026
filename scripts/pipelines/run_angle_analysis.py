@@ -1,21 +1,132 @@
 from __future__ import annotations
 
 import argparse
+import re
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import scripts.db.db_utils as db_utils
 from scripts.config import RESULTS_DIR
 from scripts.features.angle_features import head_body_misalignment_metrics_from_ids
 from scripts.plots.group_comparison_plot import plot_group_comparison
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Run angle analysis for specified task(s), saline vs ghrelin."
+def _parse_id_list(value: str) -> list[int]:
+    """Parse a comma-separated list of integer IDs."""
+    try:
+        ids = [int(token.strip()) for token in value.split(",") if token.strip()]
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"Invalid ID list: {value!r}") from exc
+
+    if not ids:
+        raise argparse.ArgumentTypeError("Each --id-list must contain at least one integer ID.")
+
+    return ids
+
+
+def _slugify(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r"[^a-z0-9]+", "_", value)
+    return value.strip("_") or "group"
+
+
+def run_angle_analysis_groups(
+    *,
+    id_lists: list[list[int]],
+    labels: list[str],
+    analysis_name: str | None = None,
+    individual: str | None = None,
+    likelihood_threshold: float | None = None,
+    metric: str = "p95",
+    test: str = "welch",
+    plot_type: str = "bar",
+) -> tuple[pd.DataFrame, str, str]:
+    """Run angle analysis from explicit groups and return outputs.
+
+    Returns:
+        tuple(summary_df, excel_path, fig_path)
+    """
+    if len(id_lists) != len(labels):
+        raise ValueError("Number of id_lists and labels must match.")
+    if len(id_lists) < 2:
+        raise ValueError("Provide at least two groups for comparison.")
+
+    RESULTS_DIR.mkdir(exist_ok=True)
+    angle_analysis_dir = RESULTS_DIR / "angle_analysis"
+    angle_analysis_dir.mkdir(exist_ok=True)
+
+    out_name = (
+        _slugify(analysis_name)
+        if analysis_name
+        else "_".join(_slugify(label) for label in labels)
     )
 
-    parser.add_argument("--task", nargs='+', default=["ChickenBroth"], help="Task name(s) to analyze (e.g., --task ToyRAT ToyStick)")
+    all_angles: list[list[float]] = []
+    summary_rows: list[dict[str, object]] = []
+
+    for label, record_ids in zip(labels, id_lists):
+        angle_dicts = head_body_misalignment_metrics_from_ids(
+            record_ids,
+            likelihood_threshold=likelihood_threshold,
+            individual=individual,
+        )
+        angles = [d[metric] for d in angle_dicts]
+        all_angles.append(angles)
+        summary_rows.extend(
+            {
+                "id": record_id,
+                "group": label,
+                "angle": angle,
+            }
+            for record_id, angle in zip(record_ids, angles)
+        )
+
+    summary_df = pd.DataFrame(summary_rows)
+
+    excel_path = angle_analysis_dir / f"{out_name}_lt_{likelihood_threshold}_angle_summary.xlsx"
+    summary_df.to_excel(excel_path, index=False)
+
+    ax = plot_group_comparison(
+        *all_angles,
+        labels=labels,
+        ylabel=f"Head-body misalignment {metric} (rad)",
+        test=test,
+        plot_type=plot_type,
+    )
+
+    ax.set_title(f"{out_name}: head-body misalignment {metric}")
+    plt.tight_layout()
+
+    fig_path = angle_analysis_dir / f"{out_name}_lt_{likelihood_threshold}_angle_{plot_type}plot.pdf"
+    plt.savefig(fig_path, dpi=300)
+    plt.close()
+
+    return summary_df, str(excel_path), str(fig_path)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Run angle analysis from explicit ID groups and labels."
+    )
+
+    parser.add_argument(
+        "--analysis-name",
+        default=None,
+        help="Optional output name prefix. Defaults to slugified labels.",
+    )
+    parser.add_argument(
+        "--id-list",
+        action="append",
+        type=_parse_id_list,
+        required=True,
+        help="Comma-separated IDs for one group (repeat for multiple groups).",
+    )
+    parser.add_argument(
+        "--label",
+        action="append",
+        default=None,
+        help="Label for each --id-list group (repeat; order must match --id-list).",
+    )
     parser.add_argument(
         "--individual",
         default=None,
@@ -48,69 +159,21 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    RESULTS_DIR.mkdir(exist_ok=True)
-    angle_analysis_dir = RESULTS_DIR / "angle_analysis"
-    angle_analysis_dir.mkdir(exist_ok=True)
+    if args.label is None:
+        parser.error("Provide --label for each --id-list.")
+    if len(args.id_list) != len(args.label):
+        parser.error("Number of --id-list and --label arguments must match.")
 
-    # Combine IDs from all specified tasks
-    saline_ids = []
-    ghrelin_ids = []
-    for task in args.task:
-        saline_ids.extend(db_utils.get_treatment_ids(task, 'Y'))
-        ghrelin_ids.extend(db_utils.get_treatment_ids(task, 'P'))
-
-    task_name = "_".join(args.task)
-    print(f"Tasks: {task_name}")
-    print(f"Saline IDs: {len(saline_ids)}")
-    print(f"Ghrelin IDs: {len(ghrelin_ids)}")
-
-    # Get dicts with multiple metrics for each treatment group
-    angle_saline_dicts = head_body_misalignment_metrics_from_ids(
-        saline_ids,
-        likelihood_threshold=args.likelihood_threshold,
+    _, excel_path, fig_path = run_angle_analysis_groups(
+        id_lists=args.id_list,
+        labels=args.label,
+        analysis_name=args.analysis_name,
         individual=args.individual,
-    )
-
-    angle_ghrelin_dicts = head_body_misalignment_metrics_from_ids(
-        ghrelin_ids,
         likelihood_threshold=args.likelihood_threshold,
-        individual=args.individual,
-    )
-
-    # Extract the selected metric
-    metric = args.metric
-    angle_saline = [d[metric] for d in angle_saline_dicts]
-    angle_ghrelin = [d[metric] for d in angle_ghrelin_dicts]
-    
-    summary_df = pd.DataFrame(
-        {
-            "id": saline_ids + ghrelin_ids,
-            "group": (
-                ["Saline"] * len(angle_saline)
-                + ["Ghrelin"] * len(angle_ghrelin)
-            ),
-            "angle": angle_saline + angle_ghrelin,
-        }
-    )
-
-    excel_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_summary.xlsx"
-    summary_df.to_excel(excel_path, index=False)
-
-    ax = plot_group_comparison(
-        angle_saline,
-        angle_ghrelin,
-        labels=["Saline", "Ghrelin"],
-        ylabel=f"Head-body misalignment {metric} (rad)",
+        metric=args.metric,
         test=args.test,
         plot_type=args.plot_type,
     )
-
-    ax.set_title(f"{task_name}: head-body misalignment {metric}")
-    plt.tight_layout()
-
-    fig_path = angle_analysis_dir / f"{task_name.lower()}_lt_{args.likelihood_threshold}_angle_{args.plot_type}plot.pdf"
-    plt.savefig(fig_path, dpi=300)
-    plt.close()
 
     print(f"Saved Excel: {excel_path}")
     print(f"Saved figure: {fig_path}")
