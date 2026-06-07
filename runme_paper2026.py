@@ -10,6 +10,8 @@ def main() -> None:
     os.environ["ENV_FILE"] = ".env.paper2026"
 
     from scripts.db.get_filtered_ids import get_filtered_ids
+    from scripts.pipelines.run_angle_analysis import run_angle_analysis_groups
+    from scripts.pipelines.run_curvature_analysis import run_curvature_analysis_groups
     from scripts.pipelines.run_speed_analysis import run_speed_analysis_groups
 
     print("Running speed analysis (paper2026) with dynamic DB filters...")
@@ -54,10 +56,102 @@ def main() -> None:
         check=True,
     )
 
+    print("Running curvature analysis (paper2026) with dynamic DB filters...")
+    _, curv_excel_path_rat, curv_fig_path_rat = run_curvature_analysis_groups(
+        id_lists=[toy_rat_saline, toy_rat_ghrelin],
+        labels=["Saline", "Ghrelin"],
+        analysis_name="toyrat",
+        bodypart="Midback",
+        individual="m1",
+        how="mean",
+        smoothing_window=5,
+        speed_thresh=0.01,
+        likelihood_threshold=0.5,
+        normalization=False,
+        plot_type="box",
+    )
+
+    _, curv_excel_path_stick, curv_fig_path_stick = run_curvature_analysis_groups(
+        id_lists=[toy_stick_saline, toy_stick_ghrelin],
+        labels=["Saline", "Ghrelin"],
+        analysis_name="toystick",
+        bodypart="Midback",
+        how="mean",
+        smoothing_window=5,
+        speed_thresh=0.01,
+        likelihood_threshold=0.5,
+        normalization=False,
+        plot_type="box",
+    )
+
+    print("Combining ToyRAT + ToyStick curvature...")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.pipelines.combine_task_analysis",
+            curv_excel_path_rat,
+            curv_excel_path_stick,
+            "--feature",
+            "curvature",
+            "--output-name",
+            "toyrat_toystick",
+            "--plot-type",
+            "box",
+        ],
+        check=True,
+    )
+
+    print("Running angle analysis (paper2026) with dynamic DB filters...")
+    _, angle_excel_path_rat, angle_fig_path_rat = run_angle_analysis_groups(
+        id_lists=[toy_rat_saline, toy_rat_ghrelin],
+        labels=["Saline", "Ghrelin"],
+        analysis_name="toyrat",
+        individual="m1",
+        likelihood_threshold=0.8,
+        metric="median",
+        plot_type="box",
+    )
+
+    _, angle_excel_path_stick, angle_fig_path_stick = run_angle_analysis_groups(
+        id_lists=[toy_stick_saline, toy_stick_ghrelin],
+        labels=["Saline", "Ghrelin"],
+        analysis_name="toystick",
+        likelihood_threshold=0.8,
+        metric="median",
+        plot_type="box",
+    )
+
+    print("Combining ToyRAT + ToyStick angle...")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.pipelines.combine_task_analysis",
+            angle_excel_path_rat,
+            angle_excel_path_stick,
+            "--feature",
+            "angle",
+            "--output-name",
+            "toyrat_toystick",
+            "--plot-type",
+            "box",
+        ],
+        check=True,
+    )
+
     print(f"Saved ToyRAT Excel: {excel_path_rat}")
     print(f"Saved ToyRAT figure: {fig_path_rat}")
     print(f"Saved ToyStick Excel: {excel_path_stick}")
     print(f"Saved ToyStick figure: {fig_path_stick}")
+    print(f"Saved ToyRAT curvature Excel: {curv_excel_path_rat}")
+    print(f"Saved ToyRAT curvature figure: {curv_fig_path_rat}")
+    print(f"Saved ToyStick curvature Excel: {curv_excel_path_stick}")
+    print(f"Saved ToyStick curvature figure: {curv_fig_path_stick}")
+    print(f"Saved ToyRAT angle Excel: {angle_excel_path_rat}")
+    print(f"Saved ToyRAT angle figure: {angle_fig_path_rat}")
+    print(f"Saved ToyStick angle Excel: {angle_excel_path_stick}")
+    print(f"Saved ToyStick angle figure: {angle_fig_path_stick}")
 
 
 if __name__ == "__main__":
