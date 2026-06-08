@@ -53,9 +53,10 @@ def estimate_maze_corners_from_ids(
     likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
 ) -> dict:
-    """Estimate maze corners pooled across all trials sharing the same maze_number and task.
+    """Estimate maze corners pooled across trials with matching maze_number, task, and session_date.
 
-    Queries the DB for the ``maze_number`` and ``task`` of ``record_id``, then
+    Queries the DB for ``maze_number``, ``task``, and ``session_date`` of
+    ``record_id``, then
     concatenates Midback x/y from every record with matching values before
     computing quantile-based corners.  Raises ``ValueError`` if no
     ``maze_number`` is found for the record.
@@ -64,7 +65,7 @@ def estimate_maze_corners_from_ids(
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT maze_number, task FROM public.experimental_metadata WHERE id = %s",
+                "SELECT maze_number, task, session_date FROM public.experimental_metadata WHERE id = %s",
                 (record_id,),
             )
             row = cur.fetchone()
@@ -72,11 +73,13 @@ def estimate_maze_corners_from_ids(
                 raise ValueError(
                     f"record {record_id} has no maze_number/task; cannot pool across maze."
                 )
-            maze_number, task = row[0], row[1]
+            maze_number, task, session_date = row[0], row[1], row[2]
             cur.execute(
                 "SELECT id FROM public.experimental_metadata"
-                " WHERE maze_number = %s AND task = %s",
-                (maze_number, task),
+                " WHERE maze_number = %s"
+                "   AND task = %s"
+                "   AND session_date IS NOT DISTINCT FROM %s",
+                (maze_number, task, session_date),
             )
             ids = [r[0] for r in cur.fetchall()]
     finally:
@@ -105,7 +108,8 @@ def estimate_maze_corners_from_ids(
 
     if not samples_x:
         raise ValueError(
-            f"No valid Midback samples found for maze_number={maze_number}, task={task!r}."
+            f"No valid Midback samples found for maze_number={maze_number}, "
+            f"task={task!r}, session_date={session_date!r}."
         )
 
     allx = np.concatenate(samples_x)

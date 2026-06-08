@@ -69,7 +69,7 @@ def run_speed_sections() -> None:
     from scripts.pipelines.run_speed_analysis import run_speed_analysis_groups
 
     sections = [
-        ("10x_ibu", 10, False),
+        # ("10x_ibu", 10, False),
         ("2x_ibu_modulation_null", 2, True),
     ]
 
@@ -108,96 +108,96 @@ def run_speed_sections() -> None:
         )
 
 
-def run_curvature_sections() -> None:
-    from scripts.pipelines.run_curvature_analysis import run_curvature_analysis_groups
+# def run_curvature_sections() -> None:
+#     from scripts.pipelines.run_curvature_analysis import run_curvature_analysis_groups
 
-    sections = [
-        ("10x_ibu", 10, False),
-        ("2x_ibu_modulation_null", 2, True),
-    ]
+#     sections = [
+#         ("10x_ibu", 10, False),
+#         ("2x_ibu_modulation_null", 2, True),
+#     ]
 
-    for section_name, dose_mult, require_modulation_null in sections:
-        print(f"Running curvature analysis: {section_name}")
-        grouped = _fetch_task_groups(
-            dose_mult=dose_mult,
-            require_modulation_null=require_modulation_null,
-        )
+#     for section_name, dose_mult, require_modulation_null in sections:
+#         print(f"Running curvature analysis: {section_name}")
+#         grouped = _fetch_task_groups(
+#             dose_mult=dose_mult,
+#             require_modulation_null=require_modulation_null,
+#         )
 
-        excel_paths: list[str] = []
-        for task, saline_ids, ghrelin_ids in grouped:
-            print(f"{task} | Saline IDs ({section_name}): {len(saline_ids)}")
-            print(f"{task} | Ghrelin IDs ({section_name}): {len(ghrelin_ids)}")
+#         excel_paths: list[str] = []
+#         for task, saline_ids, ghrelin_ids in grouped:
+#             print(f"{task} | Saline IDs ({section_name}): {len(saline_ids)}")
+#             print(f"{task} | Ghrelin IDs ({section_name}): {len(ghrelin_ids)}")
 
-            if not saline_ids or not ghrelin_ids:
-                print(f"Skipping {task}: one or both groups are empty.")
-                continue
+#             if not saline_ids or not ghrelin_ids:
+#                 print(f"Skipping {task}: one or both groups are empty.")
+#                 continue
 
-            _, excel_path, fig_path = run_curvature_analysis_groups(
-                id_lists=[saline_ids, ghrelin_ids],
-                labels=["Saline", "Ghrelin"],
-                analysis_name=f"paper2025_{section_name}_{task}",
-                bodypart="Midback",
-                how="mean",
-                smoothing_window=5,
-                speed_thresh=0.01,
-                likelihood_threshold=0.5,
-                normalization=False,
-                plot_type="bar",
-            )
-            excel_paths.append(excel_path)
-            print(f"Saved {task} curvature Excel: {excel_path}")
-            print(f"Saved {task} curvature figure: {fig_path}")
+#             _, excel_path, fig_path = run_curvature_analysis_groups(
+#                 id_lists=[saline_ids, ghrelin_ids],
+#                 labels=["Saline", "Ghrelin"],
+#                 analysis_name=f"paper2025_{section_name}_{task}",
+#                 bodypart="Midback",
+#                 how="mean",
+#                 smoothing_window=5,
+#                 speed_thresh=0.01,
+#                 likelihood_threshold=0.5,
+#                 normalization=False,
+#                 plot_type="bar",
+#             )
+#             excel_paths.append(excel_path)
+#             print(f"Saved {task} curvature Excel: {excel_path}")
+#             print(f"Saved {task} curvature figure: {fig_path}")
 
-        print(f"Combining curvature summaries: {section_name}")
-        _combine_task_excels(
-            excel_paths=excel_paths,
-            output_name=f"paper2025_{section_name}_alltasks",
-            feature="curvature",
-        )
+#         print(f"Combining curvature summaries: {section_name}")
+#         _combine_task_excels(
+#             excel_paths=excel_paths,
+#             output_name=f"paper2025_{section_name}_alltasks",
+#             feature="curvature",
+#         )
 
 
-def run_angle_sections() -> None:
-    from scripts.pipelines.run_angle_analysis import run_angle_analysis_groups
+# def run_angle_sections() -> None:
+#     from scripts.pipelines.run_angle_analysis import run_angle_analysis_groups
 
-    sections = [
-        ("10x_ibu", 10, False),
-        ("2x_ibu_modulation_null", 2, True),
-    ]
+#     sections = [
+#         ("10x_ibu", 10, False),
+#         ("2x_ibu_modulation_null", 2, True),
+#     ]
 
-    for section_name, dose_mult, require_modulation_null in sections:
-        print(f"Running angle analysis: {section_name}")
-        grouped = _fetch_task_groups(
-            dose_mult=dose_mult,
-            require_modulation_null=require_modulation_null,
-        )
+#     for section_name, dose_mult, require_modulation_null in sections:
+#         print(f"Running angle analysis: {section_name}")
+#         grouped = _fetch_task_groups(
+#             dose_mult=dose_mult,
+#             require_modulation_null=require_modulation_null,
+#         )
 
-        excel_paths: list[str] = []
-        for task, saline_ids, ghrelin_ids in grouped:
-            print(f"{task} | Saline IDs ({section_name}): {len(saline_ids)}")
-            print(f"{task} | Ghrelin IDs ({section_name}): {len(ghrelin_ids)}")
+#         excel_paths: list[str] = []
+#         for task, saline_ids, ghrelin_ids in grouped:
+#             print(f"{task} | Saline IDs ({section_name}): {len(saline_ids)}")
+#             print(f"{task} | Ghrelin IDs ({section_name}): {len(ghrelin_ids)}")
 
-            if not saline_ids or not ghrelin_ids:
-                print(f"Skipping {task}: one or both groups are empty.")
-                continue
+#             if not saline_ids or not ghrelin_ids:
+#                 print(f"Skipping {task}: one or both groups are empty.")
+#                 continue
 
-            _, excel_path, fig_path = run_angle_analysis_groups(
-                id_lists=[saline_ids, ghrelin_ids],
-                labels=["Saline", "Ghrelin"],
-                analysis_name=f"paper2025_{section_name}_{task}",
-                likelihood_threshold=0.8,
-                metric="median",
-                plot_type="bar",
-            )
-            excel_paths.append(excel_path)
-            print(f"Saved {task} angle Excel: {excel_path}")
-            print(f"Saved {task} angle figure: {fig_path}")
+#             _, excel_path, fig_path = run_angle_analysis_groups(
+#                 id_lists=[saline_ids, ghrelin_ids],
+#                 labels=["Saline", "Ghrelin"],
+#                 analysis_name=f"paper2025_{section_name}_{task}",
+#                 likelihood_threshold=0.8,
+#                 metric="median",
+#                 plot_type="bar",
+#             )
+#             excel_paths.append(excel_path)
+#             print(f"Saved {task} angle Excel: {excel_path}")
+#             print(f"Saved {task} angle figure: {fig_path}")
 
-        print(f"Combining angle summaries: {section_name}")
-        _combine_task_excels(
-            excel_paths=excel_paths,
-            output_name=f"paper2025_{section_name}_alltasks",
-            feature="angle",
-        )
+#         print(f"Combining angle summaries: {section_name}")
+#         _combine_task_excels(
+#             excel_paths=excel_paths,
+#             output_name=f"paper2025_{section_name}_alltasks",
+#             feature="angle",
+#         )
 
 
 def main() -> None:
@@ -206,8 +206,8 @@ def main() -> None:
     _force_env_from_file(".env.paper2025")
 
     run_speed_sections()
-    run_curvature_sections()
-    run_angle_sections()
+    # run_curvature_sections()
+    # run_angle_sections()
 
 
 if __name__ == "__main__":
