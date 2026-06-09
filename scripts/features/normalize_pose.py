@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 
 from scripts.utils.dlc_utils import get_bodypart_xy_time
 import scripts.db.db_utils as db_utils
-from scripts.features.estimate_maze_corners import (
-    estimate_maze_corners_from_id,
-    estimate_maze_corners_from_ids,
-)
 
 
 def normalize_coords(
@@ -82,14 +77,11 @@ def normalize_bodypart_from_id(
     individual: str | None = None,
     likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
-    quantiles: tuple[float, float] = (0.5, 99.5),
-    pool_across_maze: bool | None = None,
 ) -> tuple:
     """Return normalized (x, y, likelihood, time, index) for one bodypart.
 
-    Coordinates are mapped into the unit square using maze corners estimated
-    from this record (or pooled across trials with the same ``task`` and
-    ``maze_number`` when a maze_number is available).
+    Coordinates are mapped into the unit square using cached maze corners
+    stored in ``experimental_metadata.maze_corners``.
     """
     x, y, likelihood, time, index = get_bodypart_from_id(
         record_id,
@@ -99,39 +91,14 @@ def normalize_bodypart_from_id(
         smoothing_window=smoothing_window,
     )
 
-    # determine pooling: auto-detect when pool_across_maze is not set
-    if pool_across_maze is None:
-        maze_num = db_utils.get_maze_number(record_id)
-        pool = maze_num is not None
-    else:
-        pool = bool(pool_across_maze)
-
-    corners = None
-    if pool:
-        try:
-            corners = estimate_maze_corners_from_ids(
-                record_id,
-                quantiles=quantiles,
-                individual=individual,
-                likelihood_threshold=likelihood_threshold,
-                smoothing_window=smoothing_window,
-            )
-        except Exception:
-            corners = None
-
+    corners = db_utils.get_cached_maze_corners(record_id)
     if corners is None:
-        try:
-            corners = estimate_maze_corners_from_id(
-                record_id,
-                quantiles=quantiles,
-                individual=individual,
-                likelihood_threshold=likelihood_threshold,
-                smoothing_window=smoothing_window,
-            )
-        except Exception:
-            corners = None
+        raise ValueError(
+            f"No cached maze_corners found for ID {record_id}. "
+            "Run scripts.db.inject_maze_corners first."
+        )
 
-    if corners is not None and x.size > 0:
+    if x.size > 0:
         coords = np.column_stack([x, y])
         coords_norm = normalize_coords(coords, corners, clip=True)
         x = coords_norm[:, 0]
