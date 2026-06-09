@@ -9,7 +9,7 @@ import scripts.db.db_utils as db_utils
 def estimate_maze_corners_from_id(
     record_id: int,
     *,
-    quantiles: tuple[float, float] = (0.5, 99.5),
+    quantiles: tuple[float, float] = (0.1, 99.9),
     individual: str | None = None,
     likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
@@ -48,7 +48,7 @@ def estimate_maze_corners_from_id(
 def estimate_maze_corners_from_ids(
     record_id: int,
     *,
-    quantiles: tuple[float, float] = (0.5, 99.5),
+    quantiles: tuple[float, float] = (0.1, 99.9),
     individual: str | None = None,
     likelihood_threshold: float | None = 0.9,
     smoothing_window: int | None = None,
