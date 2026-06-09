@@ -135,6 +135,38 @@ def get_maze_number(record_id: int) -> int | None:
 
     return int(row[0])
 
+
+def get_cached_maze_corners(record_id: int) -> dict | None:
+    """Return cached maze corners from experimental_metadata, if available."""
+    conn = connect()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT maze_corners
+                FROM public.experimental_metadata
+                WHERE id = %s
+                """,
+                (record_id,),
+            )
+            row = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not row or row[0] is None:
+        return None
+
+    corners = row[0]
+    if len(corners) != 4 or any(value is None for value in corners):
+        return None
+
+    return {
+        "x_min": float(corners[0]),
+        "x_max": float(corners[1]),
+        "y_min": float(corners[2]),
+        "y_max": float(corners[3]),
+    }
+
 def load_dlc_dataframe(filtered_pose_file: str) -> pd.DataFrame:
     """Load a filtered DLC file (H5 preferred, CSV fallback) from filtered_pose_data."""
     base_path = DATA_DIR / "filtered_pose_data" / filtered_pose_file
