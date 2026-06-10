@@ -80,8 +80,7 @@ def normalize_bodypart_from_id(
 ) -> tuple:
     """Return normalized (x, y, likelihood, time, index) for one bodypart.
 
-    Coordinates are mapped into the unit square using cached maze corners
-    stored in ``experimental_metadata.maze_corners``.
+    Coordinates are normalized using cached corners in DB.
     """
     x, y, likelihood, time, index = get_bodypart_from_id(
         record_id,
@@ -91,14 +90,13 @@ def normalize_bodypart_from_id(
         smoothing_window=smoothing_window,
     )
 
-    corners = db_utils.get_cached_maze_corners(record_id)
-    if corners is None:
-        raise ValueError(
-            f"No cached maze_corners found for ID {record_id}. "
-            "Run scripts.db.inject_maze_corners first."
-        )
-
     if x.size > 0:
+        corners = db_utils.get_cached_maze_corners(record_id)
+        if corners is None:
+            raise ValueError(
+                f"No cached maze_corners found for ID {record_id}. "
+                "Run scripts.db.inject_maze_corners first."
+            )
         coords = np.column_stack([x, y])
         coords_norm = normalize_coords(coords, corners, clip=True)
         x = coords_norm[:, 0]
