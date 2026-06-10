@@ -58,7 +58,6 @@ def main() -> None:
     print(f"{args.task}-Saline IDs: {len(saline_ids)}")
     print(f"{args.task}-Ghrelin IDs: {len(ghrelin_ids)}")
 
-    # Saline
     if saline_ids:
         plot_trajectory_from_ids(
             saline_ids,
@@ -73,7 +72,6 @@ def main() -> None:
         plt.close()
         print(f"Saved figure: {fig_path}")
 
-    # Ghrelin
     if ghrelin_ids:
         plot_trajectory_from_ids(
             ghrelin_ids,

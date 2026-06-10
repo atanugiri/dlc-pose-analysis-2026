@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from scripts.config import RESULTS_DIR
 from scripts.plots.group_comparison_plot import plot_group_comparison
@@ -16,7 +16,7 @@ def main() -> None:
     )
     parser.add_argument(
         "excel_files",
-        nargs='+',
+        nargs="+",
         type=Path,
         help="Excel files to combine (e.g., toyrat_head_*.xlsx toystick_head_*.xlsx)",
     )
@@ -34,8 +34,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--test",
-        choices=['welch', 'mann_whitney'],
-        default='welch',
+        choices=["welch", "mann_whitney"],
+        default="welch",
         help="Statistical test to use (welch=two-tailed t-test, mann_whitney=non-parametric).",
     )
     parser.add_argument(
@@ -47,12 +47,10 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Validate files exist
     for f in args.excel_files:
         if not f.exists():
             raise FileNotFoundError(f"Excel file not found: {f}")
 
-    # Read and concatenate all Excel files
     dfs = [pd.read_excel(f) for f in args.excel_files]
     combined_df = pd.concat(dfs, ignore_index=True)
 
@@ -61,18 +59,19 @@ def main() -> None:
         print(f"  - {f.name}")
     print(f"Total rows: {len(combined_df)}")
 
-    # Extract saline and ghrelin groups
     feature = args.feature
     if feature not in combined_df.columns:
-        raise ValueError(f"Feature '{feature}' not found in CSV. Available columns: {combined_df.columns.tolist()}")
-    
+        raise ValueError(
+            f"Feature '{feature}' not found in CSV. "
+            f"Available columns: {combined_df.columns.tolist()}"
+        )
+
     saline_values = combined_df[combined_df["group"] == "Saline"][feature].tolist()
     ghrelin_values = combined_df[combined_df["group"] == "Ghrelin"][feature].tolist()
 
     print(f"Saline samples: {len(saline_values)}")
     print(f"Ghrelin samples: {len(ghrelin_values)}")
 
-    # Create plot
     ax = plot_group_comparison(
         saline_values,
         ghrelin_values,
@@ -86,10 +85,7 @@ def main() -> None:
     ax.set_title(f"Combined tasks: {feature}")
     plt.tight_layout()
 
-    # Save combined CSV and plot
     RESULTS_DIR.mkdir(exist_ok=True)
-    
-    # Map feature to analysis directory
     feature_dir_map = {
         "speed": "speed_analysis",
         "curvature": "curvature_analysis",
@@ -107,7 +103,6 @@ def main() -> None:
 
     print(f"Saved combined Excel: {excel_path}")
     print(f"Saved combined plot: {fig_path}")
-
 
 
 if __name__ == "__main__":

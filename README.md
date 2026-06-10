@@ -77,10 +77,10 @@ Use [runme_paper2026.sh](/Users/atanugiri/Downloads/dlc-pose-analysis-2026/runme
 bash runme_paper2026.sh
 ```
 
-For custom runs, use the generic analysis runner with `--help`.
+For custom runs, use the main analysis entrypoint.
 
 ```bash
-python -m scripts.pipelines.run_analysis --help
+python runme_paper2026.py
 ```
 
 ## Statistical Tests
@@ -90,10 +90,10 @@ Analyses that call `group_comparison_plot` support:
 - `welch` (default, two-tailed Welch t-test)
 - `mann_whitney`
 
-Pass with `--test`, for example:
+Pass with `--test` in your configured run entrypoint as needed.
 
 ```bash
-python -m scripts.pipelines.run_analysis speed --task ToyRAT --test mann_whitney
+python runme_paper2026.py
 ```
 
 ## Outputs
