@@ -3,10 +3,11 @@ from __future__ import annotations
 import argparse
 import importlib
 from pathlib import Path
+import re
 import sys
 
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
@@ -42,10 +43,23 @@ def main() -> None:
         required=True,
         help="Target table name (for example: experimental_metadata or maze_map).",
     )
+    parser.add_argument(
+        "--mode",
+        choices=["replace", "append", "truncate_append"],
+        default="truncate_append",
+        help=(
+            "Import mode: replace drops/recreates table; append inserts rows; "
+            "truncate_append clears table then appends (preserves schema)."
+        ),
+    )
     args = parser.parse_args()
 
     csv_path = args.csv_file
     table_name = args.table
+    mode = args.mode
+
+    if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", table_name):
+        raise ValueError(f"Unsafe table name: {table_name!r}")
 
     engine = create_sqlalchemy_engine()
 
@@ -59,15 +73,18 @@ def main() -> None:
         print(f"  Table: {table_name}")
 
         df = pd.read_csv(csv_path)
-        df.to_sql(
-            table_name,
-            engine,
-            schema="public",
-            if_exists="replace",
-            index=False,
-        )
+        if mode == "truncate_append":
+            with engine.begin() as conn:
+                conn.execute(text(f'TRUNCATE TABLE public."{table_name}" RESTART IDENTITY'))
+            if_exists = "append"
+        elif mode == "append":
+            if_exists = "append"
+        else:
+            if_exists = "replace"
 
-        print(f"Done: {len(df)} rows x {len(df.columns)} columns")
+        df.to_sql(table_name, engine, schema="public", if_exists=if_exists, index=False)
+
+        print(f"Done: {len(df)} rows x {len(df.columns)} columns (mode={mode})")
     finally:
         engine.dispose()
 
