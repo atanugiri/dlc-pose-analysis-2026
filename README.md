@@ -1,6 +1,6 @@
 # DLC Pose Analysis 2026
 
-This repository contains DeepLabCut-based trajectory analysis pipelines for saline vs ghrelin comparisons.
+This repository contains DeepLabCut-based trajectory analysis code for saline vs ghrelin comparisons.
 
 ## Repository Layout
 
@@ -8,7 +8,7 @@ This repository contains DeepLabCut-based trajectory analysis pipelines for sali
 - `database/`: schema, views, and import SQL
 - `scripts/features/`: feature extraction code
 - `scripts/plots/`: plotting utilities (including `group_comparison_plot`)
-- `scripts/pipelines/`: runnable analysis pipelines
+- `scripts/pipelines/`: runnable analysis helpers and CLI entrypoints
 - `results/`: generated Excel summaries and figures
 - `notebooks/`: exploratory analysis notebooks
 
@@ -31,10 +31,10 @@ DB_PASSWORD=
 DB_NAME=dlc_pose_analysis_2026
 ```
 
-Then run pipelines with module syntax from repository root:
+Then run analyses from repository root:
 
 ```bash
-python -m scripts.pipelines.run_speed_analysis --task ToyRAT
+python runme_paper2026.py
 ```
 
 ## CSV Export And Rebuild Workflow
@@ -66,22 +66,26 @@ Notes:
 - Preferred setup: configure local DB settings in `.env` (loaded by `python-dotenv` in `scripts/config.py`).
 - Fallback setup: edit defaults in `scripts/config.py` (`DB_CONNECT_KWARGS`).
 - Run the import command above for each CSV file you want to load.
-- Run analysis pipelines normally.
+- Run analyses normally.
 - For reproducibility, include the two CSV files plus this import command in your submission instructions.
 
 ## Analysis Pipelines
 
-Use [runme.sh](runme.sh) as the source of truth for exact execution steps.
+Use [runme_paper2026.sh](/Users/atanugiri/Downloads/dlc-pose-analysis-2026/runme_paper2026.sh) as the source of truth for exact execution steps.
 
 ```bash
-bash runme.sh
+bash runme_paper2026.sh
 ```
 
-For custom runs, use each pipeline module with `--help`.
+For custom runs, use the generic analysis runner with `--help`.
+
+```bash
+python -m scripts.pipelines.run_analysis --help
+```
 
 ## Statistical Tests
 
-Pipelines that call `group_comparison_plot` support:
+Analyses that call `group_comparison_plot` support:
 
 - `welch` (default, two-tailed Welch t-test)
 - `mann_whitney`
@@ -89,7 +93,7 @@ Pipelines that call `group_comparison_plot` support:
 Pass with `--test`, for example:
 
 ```bash
-python -m scripts.pipelines.run_speed_analysis --task ToyRAT --test mann_whitney
+python -m scripts.pipelines.run_analysis speed --task ToyRAT --test mann_whitney
 ```
 
 ## Outputs
