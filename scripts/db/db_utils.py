@@ -33,7 +33,7 @@ def fetch_ids_with_params(query: str, params: tuple) -> list[int]:
         conn.close()
 
 
-def _apply_excluded_ids(record_ids: list[int]) -> list[int]:
+def apply_excluded_ids(record_ids: list[int]) -> list[int]:
     """Filter out IDs listed in EXCLUDED_IDS."""
     if not EXCLUDED_IDS:
         return record_ids

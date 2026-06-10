@@ -4,7 +4,7 @@ import argparse
 import re
 from collections.abc import Sequence
 
-from scripts.db.db_utils import _apply_excluded_ids, connect, fetch_ids_with_params
+from scripts.db.db_utils import apply_excluded_ids, connect, fetch_ids_with_params
 
 SCHEMA_NAME = "public"
 TABLE_NAME = "experimental_metadata"
@@ -87,7 +87,7 @@ def get_filtered_ids(filters: dict[str, object]) -> list[int]:
     """Return cleaned IDs for a dynamic filter mapping."""
     query, params = _build_query(list(filters.items()))
     ids = fetch_ids_with_params(query, params)
-    return _apply_excluded_ids(ids)
+    return apply_excluded_ids(ids)
 
 
 def parse_filters(filter_args: Sequence[str]) -> dict[str, object]:
