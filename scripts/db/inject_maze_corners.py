@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 
 import scripts.db.db_utils as db_utils
-from scripts.features.estimate_maze_corners import estimate_maze_corners_from_ids
+from scripts.features.estimate_maze_corners import estimate_maze_corners_from_id, estimate_maze_corners_from_ids
 
 
 def fetch_all_ids() -> list[int]:
@@ -76,13 +76,26 @@ def main() -> None:
                 likelihood_threshold=args.likelihood_threshold,
                 smoothing_window=args.smoothing_window,
             )
-            update_corners(record_id, corners)
-            updated += 1
-        except Exception as exc:
-            skipped += 1
-            print(f"Skipping id={record_id}: {exc}")
-            if args.stop_on_error:
-                raise
+        except Exception as pooled_exc:
+            try:
+                corners = estimate_maze_corners_from_id(
+                    record_id,
+                    quantiles=quantiles,
+                    individual=args.individual,
+                    likelihood_threshold=args.likelihood_threshold,
+                    smoothing_window=args.smoothing_window,
+                )
+            except Exception as single_exc:
+                skipped += 1
+                print(
+                    f"Skipping id={record_id}: pooled={pooled_exc}; single={single_exc}"
+                )
+                if args.stop_on_error:
+                    raise
+                continue
+
+        update_corners(record_id, corners)
+        updated += 1
 
     print(f"Done. Updated={updated}, Skipped={skipped}")
 
