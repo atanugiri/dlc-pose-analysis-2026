@@ -8,7 +8,7 @@ This repository contains DeepLabCut-based trajectory analysis code for saline vs
 - `database/`: schema, views, and import SQL
 - `scripts/features/`: feature extraction code
 - `scripts/plots/`: plotting utilities (including `group_comparison_plot`)
-- `scripts/pipelines/`: runnable analysis helpers and CLI entrypoints
+- `scripts/utils/`: utility scripts (including the task summary combiner)
 - `results/`: generated Excel summaries and figures
 - `notebooks/`: exploratory analysis notebooks
 
@@ -21,7 +21,9 @@ conda env create -f environment.yml
 conda activate ghrelin
 ```
 
-Create `.env` in project root and add your local PostgreSQL settings, for example:
+Do not commit real `.env` files. For reproducibility, keep secrets local and share a sanitized template.
+
+Create a local env file (`.env` or `.env.paper2026`) in project root with your PostgreSQL settings, for example:
 
 ```bash
 DB_HOST=localhost
@@ -29,7 +31,28 @@ DB_PORT=5432
 DB_USER=atanugiri
 DB_PASSWORD=
 DB_NAME=dlc_pose_analysis_2026
+MAZE_SIZE_CM=64
 ```
+
+`MAZE_SIZE_CM=64` is required for reproducibility because normalized coordinates are converted to physical units (cm) using this value.
+
+Recommended reproducible workflow:
+
+1. Add an `.env.example` file to the repo with placeholder (non-secret) values.
+2. Each user copies it locally, for example:
+
+```bash
+cp .env.example .env.paper2026
+```
+
+3. Fill in local credentials in `.env.paper2026`.
+4. Run with that env file selected:
+
+```bash
+ENV_FILE=.env.paper2026 python runme_paper2026.py
+```
+
+This repo already ignores `.env` and `.env.*`, so secrets stay local.
 
 Then run analyses from repository root:
 
@@ -63,15 +86,15 @@ python -m scripts.db.import_project_csvs_to_postgres --csv-file data/maze_map.cs
 Notes:
 
 - The import script uses pandas `to_sql` with fixed `if_exists=replace` behavior.
-- Preferred setup: configure local DB settings in `.env` (loaded by `python-dotenv` in `scripts/config.py`).
+- Preferred setup: configure local DB settings in `.env`/`.env.paper2026` (loaded by `python-dotenv` in `scripts/config.py`).
 - Fallback setup: edit defaults in `scripts/config.py` (`DB_CONNECT_KWARGS`).
 - Run the import command above for each CSV file you want to load.
 - Run analyses normally.
 - For reproducibility, include the two CSV files plus this import command in your submission instructions.
 
-## Analysis Pipelines
+## Analysis Run
 
-Use [runme_paper2026.sh](/Users/atanugiri/Downloads/dlc-pose-analysis-2026/runme_paper2026.sh) as the source of truth for exact execution steps.
+Use [runme_paper2026.sh](runme_paper2026.sh) as the source of truth for exact execution steps.
 
 ```bash
 bash runme_paper2026.sh
