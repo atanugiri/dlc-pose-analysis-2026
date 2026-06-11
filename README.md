@@ -4,7 +4,7 @@ This repository contains DeepLabCut-based trajectory analysis code for saline vs
 
 ## Repository Layout
 
-- `data/filtered_pose_data/`: filtered DeepLabCut `.h5` files
+- `data/paper2026/filtered_pose_data/`: filtered DeepLabCut `.h5` files
 - `database/`: schema, views, and import SQL
 - `scripts/features/`: feature extraction code
 - `scripts/plots/`: plotting utilities (including `group_comparison_plot`)
@@ -49,7 +49,7 @@ cp .env.example .env.paper2026
 4. Run with that env file selected:
 
 ```bash
-ENV_FILE=.env.paper2026 python runme_paper2026.py
+ENV_FILE=.env.paper2026 python runme_2026.py
 ```
 
 This repo already ignores `.env` and `.env.*`, so secrets stay local.
@@ -57,30 +57,18 @@ This repo already ignores `.env` and `.env.*`, so secrets stay local.
 Then run analyses from repository root:
 
 ```bash
-python runme_paper2026.py
+python runme_2026.py
 ```
 
-## CSV Export And Rebuild Workflow
+## CSV-First DB Setup (Paper 2026)
 
-For code submission, the PostgreSQL-backed metadata tables can be exported as CSV and later re-imported.
-
-Export current DB tables to CSV files in `data/` with `psql`:
-
-```bash
-psql -d dlc_pose_analysis_2026 -c "\copy (SELECT * FROM public.experimental_metadata ORDER BY id) TO 'data/experimental_metadata.csv' CSV HEADER"
-psql -d dlc_pose_analysis_2026 -c "\copy (SELECT * FROM public.maze_map ORDER BY task, genotype, animal_name, start_date, end_date) TO 'data/maze_map.csv' CSV HEADER"
-```
-
-This writes:
-
-- `data/experimental_metadata.csv`
-- `data/maze_map.csv`
-
-Recreate DB table contents from those CSV files:
+This project assumes users may start without an existing database.
+CSV files are hosted on Harvard Dataverse and are not tracked in GitHub.
+Download the CSVs and place them in `data/paper2026/`, then populate required tables:
 
 ```bash
-python -m scripts.db.import_project_csvs_to_postgres --csv-file data/experimental_metadata.csv --table experimental_metadata
-python -m scripts.db.import_project_csvs_to_postgres --csv-file data/maze_map.csv --table maze_map
+python -m scripts.db.import_project_csvs_to_postgres --csv-file data/paper2026/experimental_metadata.csv --table experimental_metadata
+python -m scripts.db.import_project_csvs_to_postgres --csv-file data/paper2026/maze_map.csv --table maze_map
 ```
 
 Notes:
@@ -90,20 +78,20 @@ Notes:
 - Fallback setup: edit defaults in `scripts/config.py` (`DB_CONNECT_KWARGS`).
 - Run the import command above for each CSV file you want to load.
 - Run analyses normally.
-- For reproducibility, include the two CSV files plus this import command in your submission instructions.
+- For reproducibility, distribute the Harvard Dataverse CSV references and this import command in your setup instructions.
 
 ## Analysis Run
 
-Use [runme_paper2026.sh](runme_paper2026.sh) as the source of truth for exact execution steps.
+Use [runme_2026.sh](runme_2026.sh) as the source of truth for exact execution steps.
 
 ```bash
-bash runme_paper2026.sh
+bash runme_2026.sh
 ```
 
 For custom runs, use the main analysis entrypoint.
 
 ```bash
-python runme_paper2026.py
+python runme_2026.py
 ```
 
 ## Statistical Tests
@@ -116,7 +104,7 @@ Analyses that call `group_comparison_plot` support:
 Pass with `--test` in your configured run entrypoint as needed.
 
 ```bash
-python runme_paper2026.py
+python runme_2026.py
 ```
 
 ## Outputs
